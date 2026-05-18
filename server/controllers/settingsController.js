@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const { query } = require('../config/db');
 const { parseExcel, mergeHeaders, autoMapColumns, applyMappings, validateMappings, generateMappedExcel } = require('../utils/excelParser');
-const { calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs, calcDashboardCharts, calcB2BCharts, calcB2CCharts, SYSTEM_PARAMETERS } = require('../utils/formulas');
+const { calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs, SYSTEM_PARAMETERS } = require('../utils/formulas');
 
 // Multer setup for file uploads
 const storage = multer.memoryStorage();
@@ -299,10 +299,20 @@ const fetchAndActivateApi = async (req, res) => {
     }
 
     // 3. Fetch data from external URL
-    const externalRes = await fetch(integration.endpoint_url, {
-      method: integration.method || 'GET',
-      headers: fetchHeaders,
-    });
+    let externalRes;
+    try {
+      externalRes = await fetch(integration.endpoint_url, {
+        method: integration.method || 'GET',
+        headers: fetchHeaders,
+      });
+    } catch (fetchErr) {
+      const code = fetchErr?.cause?.code || fetchErr.code || '';
+      const msg = code === 'ECONNREFUSED'
+        ? `Cannot connect to ${integration.endpoint_url} — the external service is not running or unreachable.`
+        : `Network error reaching ${integration.endpoint_url}: ${fetchErr.message}`;
+      console.warn(`[fetchAndActivateApi] ${msg}`);
+      return res.status(502).json({ error: msg });
+    }
     if (!externalRes.ok) return res.status(502).json({ error: `External API returned ${externalRes.status}` });
 
     let rawData = await externalRes.json();
