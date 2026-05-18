@@ -237,19 +237,35 @@ function calcDashboardCharts(rows) {
 
 function calcB2BCharts(rows) {
   const kpis = calcB2BKPIs(rows);
-  // Try per-channel trend; if no engagement columns exist, synthesize from MQL→SQL rate
-  let engagement = generatePerChannelTrend(rows, ['engagement_score', 'Account Engagement Score', 'Number of MQLs']);
-  if (!engagement) {
-    engagement = generateTrendFromRows(rows, ['Number of MQLs', 'Number of SQLs']);
-  }
-  if (!engagement) {
-    // Ultimate fallback: single KPI value
-    engagement = { labels: ['Current'], data: [kpis.mql_sql_conversion || 0] };
-  }
+
+  // Win Rate Trend: group by month, calculate (Won Deals / Total Opportunities) × 100
+  const winRateTrend = generateWinRateTrend(rows);
+
   return {
     cpl_by_channel: extractChannelData(rows, 'cpl'),
-    engagement_trend: engagement
+    win_rate_trend: winRateTrend
   };
+}
+
+// Win Rate per period: (Won Deals / Total Opportunities) × 100
+function generateWinRateTrend(rows) {
+  const periods = {};
+  for (const row of rows) {
+    const period = getPeriod(row) || 'Total';
+    if (!periods[period]) periods[period] = { won: 0, total: 0 };
+    const won = parseFloat(row['Won Deals'] || row['won deals'] || row['Won deals'] || 0);
+    const total = parseFloat(row['Total Opportunities'] || row['total opportunities'] || row['Total opportunities'] || 0);
+    if (!isNaN(won)) periods[period].won += won;
+    if (!isNaN(total)) periods[period].total += total;
+  }
+  const rawLabels = Object.keys(periods);
+  if (rawLabels.length === 0) return { labels: ['Current'], data: [kpis?.win_rate || 0] };
+  const labels = sortByMonth(rawLabels);
+  const data = labels.map(l => {
+    const p = periods[l];
+    return p.total !== 0 ? Math.round(((p.won / p.total) * 100) * 100) / 100 : 0;
+  });
+  return { labels, data };
 }
 
 function calcB2CCharts(rows) {

@@ -122,8 +122,40 @@ export default function B2BPage() {
     }]
   } : null;
 
-  /* Engagement Trend — multi-line or single */
-  const engData = buildMulti(charts.engagement_trend);
+  /* Win Rate Trend — line */
+  const wrt = charts.win_rate_trend;
+  const hasWrt = wrt?.labels?.length > 0 && wrt?.data?.some(v => v !== 0);
+  const winRateData = hasWrt ? {
+    labels: wrt.labels,
+    datasets: [{
+      label: 'Win Rate (%)',
+      data: wrt.data,
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16,185,129,0.08)',
+      fill: true,
+      tension: 0.4,
+      borderWidth: 2.5,
+      pointRadius: 5,
+      pointBackgroundColor: '#10b981',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointHoverRadius: 7
+    }]
+  } : null;
+
+  const winRateOpts = {
+    responsive: true, maintainAspectRatio: false,
+    animation: { duration: 800, easing: 'easeInOutQuart' },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: true, position: 'top', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11, weight: 500 }, usePointStyle: true, pointStyle: 'circle', padding: 12, boxWidth: 8 } },
+      tooltip: { backgroundColor: 'rgba(10,14,26,0.96)', padding: 14, cornerRadius: 10, titleFont: { family: 'Inter', size: 13, weight: 700 }, bodyFont: { family: 'Inter', size: 12 }, callbacks: { label: ctx => `${ctx.parsed.y}%` } }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Month', color: '#94a3b8', font: { family: 'Inter', size: 12, weight: 600 } }, ticks: { color: '#64748b', font: { family: 'Inter', size: 11 } }, grid: { color: 'rgba(148,163,184,0.05)' } },
+      y: { title: { display: true, text: 'Win Rate (%)', color: '#94a3b8', font: { family: 'Inter', size: 12, weight: 600 } }, ticks: { color: '#64748b', font: { family: 'Inter', size: 11 }, callback: v => `${v}%` }, grid: { color: 'rgba(148,163,184,0.05)' }, min: 0 }
+    }
+  };
 
   return (
     <div className="page">
@@ -143,7 +175,7 @@ export default function B2BPage() {
       </div>
 
       <div className="chart-grid-2x2">
-        {/* 5 — CPL by Channel */}
+        {/* CPL by Channel */}
         {cplBarData ? (
           <div className="ccard">
             <div className="ccard-title">💰 CPL by Channel</div>
@@ -153,15 +185,15 @@ export default function B2BPage() {
           </div>
         ) : <div className="ccard ccard-empty"><span>💰</span><p>CPL channel data not available</p></div>}
 
-        {/* 6 — Account Engagement Score Trend */}
-        {engData ? (
+        {/* Win Rate Trend */}
+        {winRateData ? (
           <div className="ccard">
-            <div className="ccard-title">📈 Account Engagement Score Trend</div>
+            <div className="ccard-title">🏆 Win Rate Trend</div>
             <div className="ccard-body">
-              <Line data={engData} options={mkLine(true)} />
+              <Line data={winRateData} options={winRateOpts} />
             </div>
           </div>
-        ) : <div className="ccard ccard-empty"><span>📈</span><p>Engagement trend data not available</p></div>}
+        ) : <div className="ccard ccard-empty"><span>🏆</span><p>Win rate trend data not available</p></div>}
       </div>
 
       {insights?.length > 0 && (
