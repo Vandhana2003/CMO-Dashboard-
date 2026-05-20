@@ -5,8 +5,6 @@ import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/Login/LoginPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
-import B2BPage from './pages/B2B/B2BPage';
-import B2CPage from './pages/B2C/B2CPage';
 import UsersPage from './pages/Users/UsersPage';
 import ReportPage from './pages/Report/ReportPage';
 import SettingsPage from './pages/Settings/SettingsPage';
@@ -29,8 +27,6 @@ function AppRoutes() {
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="b2b" element={<B2BPage />} />
-        <Route path="b2c" element={<B2CPage />} />
         <Route path="info" element={<InfoPage />} />
         <Route path="users" element={<ProtectedRoute page="users"><UsersPage /></ProtectedRoute>} />
         <Route path="report" element={<ProtectedRoute page="report"><ReportPage /></ProtectedRoute>} />

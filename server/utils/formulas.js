@@ -5,18 +5,46 @@
  */
 
 // ============================================
-// SYSTEM PARAMETERS (canonical keys)
+// SYSTEM PARAMETERS — split by section
 // ============================================
-const SYSTEM_PARAMETERS = [
-  'PR / Media Revenue', 'PR / Media cost', 'Total Sales Cost', 'Total Marketing Cost',
-  'Channel Cost', 'Gross Margin %', 'Revenue', 'Number of New Customers',
-  'Attributed Revenue per Channel', 'Number of SQLs', 'Total Days to Close',
-  'Number of Deals', 'Won Deals', 'Total Opportunities', 'Customers Lost',
-  'Customers at Start of Period', 'AOV', 'Purchase Frequency', 'Customer Lifespan',
-  'Repeat customer', 'Total Customers', 'Purchases Completed', 'Total Orders',
-  'Channel leads', 'Carts Created', 'Leads', 'Number of MQLs', 'Deal Value',
-  'Probability', 'Channel revenue', 'COGS(Cost of Goods Sold)', 'Price per unit', 'quantity'
+// Shared dashboard params (used in both B2B and B2C)
+const DASHBOARD_PARAMS = [
+  'Channel Revenue', 'PR / Media Revenue', 'Channel cost', 'PR / Media cost',
+  'Revenue', 'Marketing cost', 'Sales Cost',
+  'Number of New Customers', 'Leads',
+  'Attributed Revenue', 'Channel Leads',
+  'Date', 'Channel'
 ];
+
+// B2B-only params
+const B2B_PARAMS = [
+  'Deal value', 'Probability',
+  'Number of MQLs', 'Number of SQLs',
+  'Total Days to Close', 'Number of Deals',
+  'Won Deals', 'Total Opportunities',
+  'Customers Lost', 'Customers at Start of Period'
+];
+
+// B2C-only params (AOV and LTV are NOT here — they are auto-calculated KPIs)
+const B2C_PARAMS = [
+  'Purchase Frequency', 'Customer Lifespan',
+  'Gross Margin %', 'COGS',
+  'Repeat Customers', 'Total Customers',
+  'Total Orders', 'Carts Created', 'Purchases Completed'
+];
+
+const SYSTEM_PARAMETERS = [...DASHBOARD_PARAMS, ...B2B_PARAMS, ...B2C_PARAMS];
+
+/**
+ * Get system parameters for a given data type
+ * @param {string} dataType - 'b2b' or 'b2c'
+ * @returns {string[]} Array of parameter names
+ */
+function getParametersForType(dataType) {
+  if (dataType === 'b2b') return [...DASHBOARD_PARAMS, ...B2B_PARAMS];
+  if (dataType === 'b2c') return [...DASHBOARD_PARAMS, ...B2C_PARAMS];
+  return SYSTEM_PARAMETERS; // fallback: all
+}
 
 // Normalize a parameter name for matching
 function normalizeKey(key) {
@@ -51,37 +79,40 @@ function get(agg, ...aliases) {
   return 0;
 }
 
+// NaN-safe round — never returns NaN, Infinity, or undefined
+function safe(v) { const n = Number(v); return (isNaN(n) || !isFinite(n)) ? 0 : Math.round(n * 100) / 100; }
+
 // ============================================
 // DASHBOARD KPIs
 // ============================================
 function calcDashboardKPIs(rows) {
   const { agg } = buildAggregates(rows);
 
-  const channelRevenue = get(agg, 'Channel revenue', 'Channel Revenue');
+  const channelRevenue = get(agg, 'Channel Revenue', 'Channel revenue');
   const prMediaRevenue = get(agg, 'PR / Media Revenue', 'PR Media Revenue');
-  const resourceRevenue = get(agg, 'Resource revenue', 'Resource Revenue');
-  const channelCost = get(agg, 'Channel Cost');
+  const resourceRevenue = get(agg, 'Resource Revenue', 'Resource revenue');
+  const channelCost = get(agg, 'Channel cost', 'Channel Cost');
   const prMediaCost = get(agg, 'PR / Media cost', 'PR Media cost');
 
   const revenue = (channelRevenue + prMediaRevenue + resourceRevenue) - (channelCost + prMediaCost);
-  const mktgCost = get(agg, 'Total Marketing Cost');
-  const salesCost = get(agg, 'Total Sales Cost');
+  const mktgCost = get(agg, 'Marketing cost', 'Marketing Cost', 'Total Marketing Cost');
+  const salesCost = get(agg, 'Sales Cost', 'Total Sales Cost');
   const newCustomers = get(agg, 'Number of New Customers');
   const leads = get(agg, 'Leads');
 
   const roi = mktgCost !== 0 ? ((revenue - mktgCost) / mktgCost) : 0;
   const cac = newCustomers !== 0 ? ((salesCost + mktgCost) / newCustomers) : 0;
-  const totalLeads = leads;
   const conversionRate = leads !== 0 ? ((newCustomers / leads) * 100) : 0;
   const cpl = leads !== 0 ? (mktgCost / leads) : 0;
 
   return {
-    revenue: Math.round(revenue * 100) / 100,
-    blended_roi: Math.round(roi * 10000) / 100,
-    cac: Math.round(cac * 100) / 100,
-    total_leads: Math.round(totalLeads),
-    conversion_rate: Math.round(conversionRate * 100) / 100,
-    cpl: Math.round(cpl * 100) / 100
+    revenue: safe(revenue),
+    marketing_spend: safe(mktgCost),
+    blended_roi: safe(roi * 100),
+    cac: safe(cac),
+    total_leads: safe(leads),
+    conversion_rate: safe(conversionRate),
+    cpl: safe(cpl)
   };
 }
 
@@ -91,19 +122,16 @@ function calcDashboardKPIs(rows) {
 function calcB2BKPIs(rows) {
   const { agg } = buildAggregates(rows);
 
-  // Pipeline Value: first calc Deal Value = Price per unit * quantity, then pipeline = Σ(DealValue × Probability)
-  // For aggregated data, we calculate per-row if possible
+  // Pipeline Value: Deal Value × Probability (per row)
   let pipelineValue = 0;
   for (const row of rows) {
-    const price = parseFloat(row['Price per unit'] || row['price per unit'] || 0);
-    const qty = parseFloat(row['quantity'] || row['Quantity'] || 0);
-    const prob = parseFloat(row['Probability'] || row['probability'] || 0);
-    const dealVal = price * qty;
-    pipelineValue += dealVal * (prob / 100);
+    const dv = parseFloat(row['Deal value'] || row['Deal Value'] || row['deal value'] || 0) || 0;
+    const prob = parseFloat(row['Probability'] || row['probability'] || 0) || 0;
+    pipelineValue += dv * (prob / 100);
   }
-  // Fallback if Deal Value is provided directly
+  // Fallback: use aggregated values
   if (pipelineValue === 0) {
-    const dv = get(agg, 'Deal Value');
+    const dv = get(agg, 'Deal value', 'Deal Value');
     const prob = get(agg, 'Probability');
     pipelineValue = dv * (prob / 100);
   }
@@ -123,11 +151,11 @@ function calcB2BKPIs(rows) {
   const churnRate = custStart !== 0 ? ((custLost / custStart) * 100) : 0;
 
   return {
-    pipeline_value: Math.round(pipelineValue * 100) / 100,
-    mql_sql_conversion: Math.round(mqlSqlRate * 100) / 100,
-    deal_velocity: Math.round(dealVelocity * 100) / 100,
-    win_rate: Math.round(winRate * 100) / 100,
-    churn_rate: Math.round(churnRate * 100) / 100
+    pipeline_value: safe(pipelineValue),
+    mql_sql_conversion: safe(mqlSqlRate),
+    deal_velocity: safe(dealVelocity),
+    win_rate: safe(winRate),
+    churn_rate: safe(churnRate)
   };
 }
 
@@ -140,36 +168,36 @@ function calcB2CKPIs(rows) {
   const revenue = get(agg, 'Revenue');
   const totalOrders = get(agg, 'Total Orders');
   const totalCustomers = get(agg, 'Total Customers');
-  const repeatCustomers = get(agg, 'Repeat customer', 'Repeat Customer', 'Repeat Customers');
+  const repeatCustomers = get(agg, 'Repeat Customers', 'Repeat customer', 'Repeat Customer');
   const cartsCreated = get(agg, 'Carts Created');
   const purchasesCompleted = get(agg, 'Purchases Completed');
   const customerLifespan = get(agg, 'Customer Lifespan');
-  const cogs = get(agg, 'COGS Cost of Goods Sold', 'COGS', 'Cost of Goods Sold');
+  const cogs = get(agg, 'COGS', 'COGS Cost of Goods Sold', 'Cost of Goods Sold');
 
-  // Step 1: AOV
+  // Step 1: AOV = Revenue / Total Orders
   const aov = totalOrders !== 0 ? (revenue / totalOrders) : 0;
 
-  // Step 2: Purchase Frequency
+  // Step 2: Purchase Frequency = Total Orders / Total Customers
   const purchaseFreq = totalCustomers !== 0 ? (totalOrders / totalCustomers) : 0;
 
-  // Step 3: Gross Margin %
+  // Step 3: Gross Margin % = [(Revenue - COGS) / Revenue] × 100
   const grossMargin = revenue !== 0 ? (((revenue - cogs) / revenue) * 100) : 0;
 
   // Step 4: LTV = AOV × Purchase Frequency × Customer Lifespan × Gross Margin%
   const ltv = aov * purchaseFreq * customerLifespan * (grossMargin / 100);
 
-  // Repeat Purchase Rate
+  // Repeat Purchase Rate = (Repeat Customers / Total Customers) × 100
   const repeatRate = totalCustomers !== 0 ? ((repeatCustomers / totalCustomers) * 100) : 0;
 
-  // Cart Abandonment Rate
+  // Cart Abandonment Rate = ((Carts Created - Purchases Completed) / Carts Created) × 100
   const abandonRate = cartsCreated !== 0 ? (((cartsCreated - purchasesCompleted) / cartsCreated) * 100) : 0;
 
   return {
-    ltv: Math.round(ltv * 100) / 100,
-    repeat_purchase_rate: Math.round(repeatRate * 100) / 100,
-    aov: Math.round(aov * 100) / 100,
-    cart_abandonment_rate: Math.round(abandonRate * 100) / 100,
-    purchase_frequency: Math.round(purchaseFreq * 100) / 100
+    ltv: safe(ltv),
+    repeat_purchase_rate: safe(repeatRate),
+    aov: safe(aov),
+    cart_abandonment_rate: safe(abandonRate),
+    purchase_frequency: safe(purchaseFreq)
   };
 }
 
@@ -222,7 +250,7 @@ function calcDashboardCharts(rows) {
   const cacLtvTrend = generateCacLtvTrend(rows);
 
   return {
-    revenue_trend: generateTrendFromRows(rows, ['Channel revenue', 'Revenue']),
+    revenue_trend: generateTrendFromRows(rows, ['Channel Revenue', 'Channel revenue', 'Revenue']),
     cac_vs_ltv: { cac: kpis.cac, ltv: b2cKpis.ltv },
     cac_vs_ltv_trend: cacLtvTrend,
     conversion_funnel: {
@@ -259,7 +287,7 @@ function generateWinRateTrend(rows) {
     if (!isNaN(total)) periods[period].total += total;
   }
   const rawLabels = Object.keys(periods);
-  if (rawLabels.length === 0) return { labels: ['Current'], data: [kpis?.win_rate || 0] };
+  if (rawLabels.length === 0) return { labels: ['Current'], data: [0] };
   const labels = sortByMonth(rawLabels);
   const data = labels.map(l => {
     const p = periods[l];
@@ -365,8 +393,8 @@ function generateCacLtvTrend(rows) {
     const periodRows = periods[label];
     const pAgg = buildAggregates(periodRows).agg;
 
-    const mktgCost = get(pAgg, 'Total Marketing Cost');
-    const salesCost = get(pAgg, 'Total Sales Cost');
+    const mktgCost = get(pAgg, 'Marketing cost', 'Marketing Cost', 'Total Marketing Cost');
+    const salesCost = get(pAgg, 'Sales Cost', 'Total Sales Cost');
     const newCust = get(pAgg, 'Number of New Customers');
     cacData.push(newCust !== 0 ? Math.round(((salesCost + mktgCost) / newCust) * 100) / 100 : 0);
 
@@ -390,21 +418,33 @@ function generateCacLtvTrend(rows) {
 function extractChannelData(rows, type) {
   const channels = {};
   for (const row of rows) {
-    const ch = getChannel(row) || 'Unknown';
+    const ch = getChannel(row);
+    if (!ch) continue; // skip rows without channel
     if (!channels[ch]) channels[ch] = { revenue: 0, cost: 0, leads: 0 };
-    channels[ch].revenue += parseFloat(row['Channel revenue'] || row['Revenue'] || 0);
-    channels[ch].cost += parseFloat(row['Channel Cost'] || row['Total Marketing Cost'] || 0);
-    channels[ch].leads += parseFloat(row['Channel leads'] || row['Leads'] || 0);
+    const rev = parseFloat(row['Channel Revenue'] || row['Channel revenue'] || row['Attributed Revenue'] || row['Revenue'] || 0) || 0;
+    const cost = parseFloat(row['Channel cost'] || row['Channel Cost'] || row['Marketing cost'] || row['Marketing Cost'] || 0) || 0;
+    const leads = parseFloat(row['Channel Leads'] || row['Channel leads'] || row['Leads'] || 0) || 0;
+    channels[ch].revenue += rev;
+    channels[ch].cost += cost;
+    channels[ch].leads += leads;
   }
   const labels = Object.keys(channels);
+  if (labels.length === 0) return { labels: [], data: [] };
   let data;
   if (type === 'roi') {
-    data = labels.map(ch => channels[ch].cost !== 0 ? ((channels[ch].revenue - channels[ch].cost) / channels[ch].cost) * 100 : 0);
+    // ROI = (Revenue - Cost) / Cost * 100
+    data = labels.map(ch => {
+      const c = channels[ch];
+      return c.cost !== 0 ? safe(((c.revenue - c.cost) / c.cost) * 100) : 0;
+    });
   } else {
-    data = labels.map(ch => channels[ch].leads !== 0 ? (channels[ch].cost / channels[ch].leads) : 0);
+    // CPL = Cost / Leads
+    data = labels.map(ch => {
+      const c = channels[ch];
+      return c.leads !== 0 ? safe(c.cost / c.leads) : 0;
+    });
   }
-  // Always return all channels — let frontend decide display
-  return { labels, data: data.map(v => Math.round(v * 100) / 100) };
+  return { labels, data };
 }
 
 // ============================================
@@ -434,7 +474,8 @@ function calcB2CInsights(kpis) {
 }
 
 module.exports = {
-  SYSTEM_PARAMETERS, normalizeKey, buildAggregates, get,
+  SYSTEM_PARAMETERS, DASHBOARD_PARAMS, B2B_PARAMS, B2C_PARAMS,
+  getParametersForType, normalizeKey, buildAggregates, get,
   calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs,
   calcDashboardCharts, calcB2BCharts, calcB2CCharts,
   calcB2BInsights, calcB2CInsights

@@ -6,8 +6,6 @@ import InfoCenter from './InfoCenter';
 
 const NAV_MAIN = [
   { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { path: '/b2b', label: 'B2B', icon: '🏢' },
-  { path: '/b2c', label: 'B2C', icon: '🛒' },
 ];
 const NAV_MGMT = [
   { path: '/users', label: 'Users', icon: '👥', restricted: true },

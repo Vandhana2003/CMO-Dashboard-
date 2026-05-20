@@ -1,5 +1,5 @@
 const XLSX = require('xlsx');
-const { normalizeKey, SYSTEM_PARAMETERS } = require('./formulas');
+const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./formulas');
 
 /**
  * Parse an Excel file buffer into an array of row objects
@@ -25,15 +25,18 @@ function mergeHeaders(existingHeaders, newHeaders) {
 
 /**
  * System-first auto-mapping:
- * For each SYSTEM_PARAMETER, find the best matching Excel column from the given headers.
+ * For each system parameter (filtered by dataType), find the best matching Excel column.
  * Returns one mapping entry per system parameter.
+ * @param {string[]} excelHeaders - column names from the Excel file
+ * @param {string} [dataType] - 'b2b' or 'b2c' (if omitted, maps all params)
  */
-function autoMapColumns(excelHeaders) {
+function autoMapColumns(excelHeaders, dataType) {
+  const params = dataType ? getParametersForType(dataType) : SYSTEM_PARAMETERS;
   const normalizedHeaders = excelHeaders.map(h => ({ original: h, normalized: normalizeKey(h) }));
   const usedHeaders = new Set();
   const mappings = [];
 
-  for (const sysParam of SYSTEM_PARAMETERS) {
+  for (const sysParam of params) {
     const nsp = normalizeKey(sysParam);
     let bestMatch = null;
     let matchStatus = 'missing';
@@ -69,16 +72,25 @@ function autoMapColumns(excelHeaders) {
 }
 
 /**
- * Apply column mappings to raw rows → produce mapped rows with system parameter keys
+ * Apply column mappings to raw rows → produce mapped rows with system parameter keys.
+ * Supports extra_columns: additional Excel columns whose values are summed into the
+ * same system parameter.
  */
 function applyMappings(rows, mappings) {
   // Build reverse lookup: excel_column → system_parameter
   const colMap = {};
+  // Build extra columns lookup: system_parameter → [extra excel cols]
+  const extraMap = {};
+
   for (const m of mappings) {
     const excelCol = m.excel_column || m.source_column; // support legacy format
     const sysParam = m.system_parameter;
     if (excelCol && sysParam && m.match_status !== 'unmapped' && m.match_status !== 'missing') {
       colMap[excelCol] = sysParam;
+    }
+    // Handle extra columns
+    if (sysParam && m.extra_columns && Array.isArray(m.extra_columns) && m.extra_columns.length > 0) {
+      extraMap[sysParam] = m.extra_columns;
     }
   }
 
@@ -87,6 +99,18 @@ function applyMappings(rows, mappings) {
     for (const [key, val] of Object.entries(row)) {
       const sysParam = colMap[key] || key;
       mapped[sysParam] = val;
+    }
+    // Sum extra columns into their system parameter
+    for (const [sysParam, extraCols] of Object.entries(extraMap)) {
+      let base = parseFloat(mapped[sysParam] || 0);
+      if (isNaN(base)) base = 0;
+      for (const ec of extraCols) {
+        const extraVal = parseFloat(row[ec] || 0);
+        if (!isNaN(extraVal)) {
+          base += extraVal;
+        }
+      }
+      mapped[sysParam] = base;
     }
     return mapped;
   });
@@ -104,7 +128,7 @@ function validateMappings(mappings) {
     issues.push({ level: 'warning', message: `${unmapped.length} system parameter(s) not mapped: ${unmapped.map(m => m.system_parameter).join(', ')}` });
   }
 
-  const requiredParams = ['Revenue', 'Leads', 'Total Marketing Cost', 'Channel revenue'];
+  const requiredParams = ['Revenue', 'Leads', 'Marketing cost', 'Channel Revenue'];
   for (const rp of requiredParams) {
     const found = mapped.some(m => normalizeKey(m.system_parameter) === normalizeKey(rp));
     if (!found) {

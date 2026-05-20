@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS datasets (
     file_name VARCHAR(255),
     original_name VARCHAR(255),
     status VARCHAR(20) DEFAULT 'uploaded' CHECK (status IN ('uploaded', 'mapped', 'validated', 'active')),
+    data_type VARCHAR(3) DEFAULT NULL,
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -58,7 +59,8 @@ CREATE TABLE IF NOT EXISTS column_mappings (
     dataset_id UUID REFERENCES datasets(id) ON DELETE CASCADE,
     source_column VARCHAR(255) NOT NULL,
     system_parameter VARCHAR(255),
-    match_status VARCHAR(10) DEFAULT 'missing' CHECK (match_status IN ('auto', 'manual', 'missing'))
+    match_status VARCHAR(10) DEFAULT 'missing' CHECK (match_status IN ('auto', 'manual', 'missing')),
+    extra_columns JSONB DEFAULT '[]'::jsonb
 );
 
 CREATE INDEX idx_column_mappings_dataset ON column_mappings(dataset_id);

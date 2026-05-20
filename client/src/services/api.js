@@ -46,13 +46,19 @@ export const api = {
   getProfile: () => request('/auth/profile'),
   updateProfile: (data) => request('/auth/profile', { method: 'PUT', body: data }),
 
-  // Dashboard
-  getDashboard: () => request('/dashboard'),
+  // Dashboard (unified — returns dashboard + b2b/b2c combined)
+  getDashboard: (channel, timePeriod) => {
+    const params = new URLSearchParams();
+    if (channel && channel !== 'all') params.set('channel', channel);
+    if (timePeriod && timePeriod !== 'all') params.set('time_period', timePeriod);
+    const qs = params.toString();
+    return request(`/dashboard${qs ? '?' + qs : ''}`);
+  },
 
-  // B2B
+  // B2B (kept for backward compat)
   getB2B: () => request('/b2b'),
 
-  // B2C
+  // B2C (kept for backward compat)
   getB2C: () => request('/b2c'),
 
   // Users
@@ -61,21 +67,36 @@ export const api = {
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
 
   // Reports
-  getReport: (type) => request(`/reports?type=${type}`),
-  downloadReport: (type) => request(`/reports/download?type=${type}`),
+  getReport: (type, channel, timePeriod) => {
+    const p = new URLSearchParams({ type });
+    if (channel && channel !== 'all') p.set('channel', channel);
+    if (timePeriod && timePeriod !== 'all') p.set('time_period', timePeriod);
+    return request(`/reports?${p.toString()}`);
+  },
+  downloadReport: (type, channel, timePeriod, filename) => {
+    const p = new URLSearchParams({ type });
+    if (channel && channel !== 'all') p.set('channel', channel);
+    if (timePeriod && timePeriod !== 'all') p.set('time_period', timePeriod);
+    if (filename) p.set('filename', filename);
+    return request(`/reports/download?${p.toString()}`);
+  },
 
   // Settings
-  getSystemParams: () => request('/settings/parameters'),
+  getSystemParams: (dataType) => request(`/settings/parameters${dataType ? `?data_type=${dataType}` : ''}`),
   getDatasets: () => request('/settings/datasets'),
   uploadExcel: (formData) => request('/settings/upload', { method: 'POST', body: formData }),
   appendToDataset: (datasetId, formData) => request(`/settings/datasets/${datasetId}/append`, { method: 'POST', body: formData }),
   getMappings: (id) => request(`/settings/mappings/${id}`),
   updateMapping: (id, data) => request(`/settings/mappings/${id}`, { method: 'PUT', body: data }),
+  updateDatasetType: (datasetId, dataType) => request(`/settings/datasets/${datasetId}/type`, { method: 'PUT', body: { data_type: dataType } }),
   validateDataset: (id) => request(`/settings/validate/${id}`, { method: 'POST' }),
   downloadMapped: (id) => request(`/settings/download-mapped/${id}`),
   saveAndProceed: (id) => request(`/settings/save-proceed/${id}`, { method: 'POST' }),
   deleteDataset: (id) => request(`/settings/datasets/${id}`, { method: 'DELETE' }),
   saveApiIntegration: (data) => request('/settings/api-integration', { method: 'POST', body: data }),
   getApiIntegrations: () => request('/settings/api-integrations'),
-  fetchApiIntegration: (id) => request(`/settings/api-integrations/${id}/fetch`, { method: 'POST' }),
+  fetchApiIntegration: (id, dataType) => request(`/settings/api-integrations/${id}/fetch`, { method: 'POST', body: { data_type: dataType } }),
+  deleteApiIntegration: (id) => request(`/settings/api-integrations/${id}`, { method: 'DELETE' }),
+  calculateCustomParam: (formula) => request('/settings/custom-param/calculate', { method: 'POST', body: { formula } }),
+  saveCustomParam: (name, formula, result) => request('/settings/custom-param/save', { method: 'POST', body: { name, formula, result } }),
 };
