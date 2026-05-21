@@ -198,20 +198,42 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Chart 3: Conversion Funnel */}
-        <div className="ccard">
-          <div className="ccard-title">🔻 Conversion Funnel</div>
-          <div className="ccard-body funnel-body">
-            <div className="funnel-wrap">
-              {fStages.map((s,i)=>{
-                const pct=((s.v/maxF)*100).toFixed(1);
-                const drop=i>0&&fStages[i-1].v>0?((fStages[i-1].v-s.v)/fStages[i-1].v*100).toFixed(1):null;
-                return(<div key={i} className="fn-row"><div className="fn-meta"><span className="fn-name">{s.l}</span><span className="fn-count">{s.v.toLocaleString()}</span></div>
-                  <div className="fn-track"><div className="fn-bar" style={{width:`${Math.max(Number(pct),5)}%`,background:s.c}}/></div>
-                  <div className="fn-right"><span className="fn-pct">{pct}%</span>{drop&&<span className="fn-drop">▼{drop}%</span>}</div></div>);
-              })}
-            </div>
-          </div>
-        </div>
+<div className="ccard">
+  <div className="ccard-title">🔻 Conversion Funnel</div>
+  <div className="ccard-body funnel-body">
+    {(() => {
+      const VW = 480, HSTAGE = 90, MINW = 80, MAXW = 480;
+      const maxV = fStages[0]?.v || 1;
+      const TOTAL = fStages.length * HSTAGE;
+      const xLeft = v => (VW - (MINW + (Math.max(v,0) / maxV) * (MAXW - MINW))) / 2;
+
+      return (
+        <svg viewBox={`0 0 ${VW} ${TOTAL}`} width="100%"
+             style={{display:'block', maxWidth:480, height:'auto', margin:'0 auto'}}>
+          {fStages.map((s, i) => {
+            const y  = i * HSTAGE;
+            const tl = xLeft(s.v);
+            const bl = xLeft(fStages[i+1] ? fStages[i+1].v : 0);
+            const pct = ((s.v / maxV) * 100).toFixed(1);
+            const cx = VW / 2, cy = y + HSTAGE / 2;
+            return (
+              <g key={i}>
+                <polygon
+                  points={`${tl},${y} ${VW-tl},${y} ${VW-bl},${y+HSTAGE} ${bl},${y+HSTAGE}`}
+                  fill={s.c}
+                />
+                <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="central"
+                  fill="#fff" fontSize={14} fontWeight={600}>{s.l}</text>
+                <text x={cx} y={cy+12} textAnchor="middle" dominantBaseline="central"
+                  fill="rgba(255,255,255,0.9)" fontSize={13}>{s.v.toLocaleString()}</text>
+              </g>
+            );
+          })}
+        </svg>
+      );
+    })()}
+  </div>
+</div>
         {/* Chart 4: Channel ROI */}
         <div className="ccard">
           <div className="ccard-title">📊 Channel ROI</div>
@@ -236,14 +258,72 @@ export default function DashboardPage() {
             {rpd?<Line data={rpd} options={mkLine()}/>
             :<div className="ccard-empty-inner"><span>🔁</span><p>No repeat purchase data yet</p></div>}
           </div></div>
-          <div className="ccard"><div className="ccard-title">🛒 Cart Abandonment</div><div className="ccard-body trap-body">
-            <div className="trap-funnel">
-              <div className="trap-row" style={{'--w':'100%','--delay':'0s'}}><div className="trap-seg" style={{background:'linear-gradient(135deg,#3b82f6,#60a5fa)'}}><span className="trap-lbl">Carts Created</span><span className="trap-val">{cartsC.toLocaleString()}</span></div></div>
-              <div className="trap-row" style={{'--w':`${cartsC>0?Math.max((purch/cartsC)*100,25):60}%`,'--delay':'0.1s'}}><div className="trap-seg" style={{background:'linear-gradient(135deg,#10b981,#34d399)'}}><span className="trap-lbl">Purchased</span><span className="trap-val">{purch.toLocaleString()}</span></div></div>
-              <div className="trap-row" style={{'--w':`${cartsC>0?Math.max((aband/cartsC)*100,18):40}%`,'--delay':'0.2s'}}><div className="trap-seg" style={{background:'linear-gradient(135deg,#ef4444,#f87171)'}}><span className="trap-lbl">Abandoned</span><span className="trap-val">{aband.toLocaleString()}</span></div></div>
-              <div className="trap-stat"><span className="trap-stat-item" style={{color:'#ef4444'}}>Abandonment: <b>{abandPct}%</b></span><span className="trap-stat-sep">·</span><span className="trap-stat-item" style={{color:'#10b981'}}>Completed: <b>{purchPct}%</b></span></div>
-            </div>
-          </div></div>
+          <div className="ccard">
+  <div className="ccard-title">🛒 Cart Abandonment</div>
+  <div className="ccard-body trap-body">
+    <div className="trap-funnel">
+      {(() => {
+        const VW = 480, HSTAGE = 90, MINW = 60, MAXW = 480;
+
+        // ✅ Always clamp so funnel never expands or shows negative
+        const purchSafe = Math.min(Math.max(purch, 0), cartsC);
+        const abandSafe = Math.min(Math.max(aband, 0), cartsC);
+        const maxV = cartsC || 1; // ✅ always use cartsC as denominator
+
+        const stages = [
+          { l: 'Carts Created', v: cartsC,    id: 'cc', c1: '#3b82f6', c2: '#60a5fa' },
+          { l: 'Purchased',     v: purchSafe, id: 'pu', c1: '#10b981', c2: '#34d399' },
+          { l: 'Abandoned',     v: abandSafe, id: 'ab', c1: '#ef4444', c2: '#f87171' },
+        ];
+
+        const xLeft = v => (VW - (MINW + (Math.min(v, maxV) / maxV) * (MAXW - MINW))) / 2;
+        const TOTAL = stages.length * HSTAGE;
+
+        return (
+          <svg viewBox={`0 0 ${VW} ${TOTAL}`} width="100%" style={{display:'block',height:'auto'}}>
+            <defs>
+              {stages.map(s => (
+                <linearGradient key={s.id} id={`g-${s.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%"   stopColor={s.c1}/>
+                  <stop offset="100%" stopColor={s.c2}/>
+                </linearGradient>
+              ))}
+            </defs>
+            {stages.map((s, i) => {
+              const y     = i * HSTAGE;
+              const tl    = xLeft(s.v);
+              const nextV = stages[i+1] ? stages[i+1].v : s.v * 0.5;
+              const bl    = xLeft(nextV);
+              const cx    = VW / 2, cy = y + HSTAGE / 2;
+              return (
+                <g key={s.id}>
+                  <polygon
+                    points={`${tl},${y} ${VW-tl},${y} ${VW-bl},${y+HSTAGE} ${bl},${y+HSTAGE}`}
+                    fill={`url(#g-${s.id})`}
+                  />
+                  <text x={cx} y={cy-10} textAnchor="middle" dominantBaseline="central"
+                    fill="#fff" fontSize={14} fontWeight={600}>{s.l}</text>
+                  <text x={cx} y={cy+12} textAnchor="middle" dominantBaseline="central"
+                    fill="rgba(255,255,255,0.9)" fontSize={13}>{s.v.toLocaleString()}</text>
+                </g>
+              );
+            })}
+          </svg>
+        );
+      })()}
+
+      <div className="trap-stat">
+        <span className="trap-stat-item" style={{color:'#ef4444'}}>
+          Abandonment: <b>{cartsC > 0 ? ((Math.min(Math.max(aband,0),cartsC)/cartsC)*100).toFixed(1) : 0}%</b>
+        </span>
+        <span className="trap-stat-sep">·</span>
+        <span className="trap-stat-item" style={{color:'#10b981'}}>
+          Completed: <b>{cartsC > 0 ? ((Math.min(Math.max(purch,0),cartsC)/cartsC)*100).toFixed(1) : 0}%</b>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
         </>)}
       </div>
 

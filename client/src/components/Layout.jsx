@@ -30,16 +30,36 @@ export default function Layout() {
   return (
     <div className="app-layout">
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-header">
+        {/* <div className="sidebar-header">
           <div className="sidebar-logo">C</div>
-          <span className="sidebar-title">CMO Centre</span>
-        </div>
-<button
-  className="sidebar-toggle"
-  onClick={() => setCollapsed(!collapsed)}
->
-  {collapsed ? '›' : '‹'}
-</button>        <nav className="nav-section">
+          <span className="sidebar-title">CMO</span>
+        </div> */}
+
+     <div className="sidebar-header">
+
+  <div className="sidebar-brand">
+
+    {/* Full Logo */}
+    <img
+      src="https://plumb5.com/assets/img/logo.png"
+      alt="Plumb5 Logo"
+      className="sidebar-logo-img full-logo"
+    />
+
+    {/* Small Logo for Collapse */}
+    <div className="sidebar-mini-logo">
+      P
+    </div>
+
+  </div>
+
+</div>
+        <button
+          className="sidebar-toggle"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? '›' : '‹'}
+        </button>        <nav className="nav-section">
           <div className="nav-section-title">Main</div>
           <ul className="nav-items">
             {NAV_MAIN.map(item => (
