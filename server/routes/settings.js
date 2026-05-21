@@ -20,5 +20,6 @@ router.post('/api-integrations/:id/fetch', authenticate, authorize('super_admin'
 router.delete('/api-integrations/:id', authenticate, authorize('super_admin', 'admin'), ctrl.deleteApiIntegration);
 router.post('/custom-param/calculate', authenticate, authorize('super_admin', 'admin'), ctrl.calculateCustomParam);
 router.post('/custom-param/save', authenticate, authorize('super_admin', 'admin'), ctrl.saveCustomParam);
+router.post('/integrate-api', authenticate, authorize('super_admin', 'admin'), ctrl.integrateExternalApi);
 
 module.exports = router;

@@ -13,15 +13,11 @@ export default function SettingsPage() {
   const [uploading, setUploading] = useState(false);
   const [appending, setAppending] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
-  const [apiForm, setApiForm] = useState({ name: '', endpoint_url: '', method: 'GET', auth_type: 'none' });
-  const [integrations, setIntegrations] = useState([]);
   const [toast, setToast] = useState(null);
-  const [fetchingApiId, setFetchingApiId] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
   const [dataType, setDataType] = useState(null); // 'b2b' or 'b2c'
-  const [apiDataType, setApiDataType] = useState('b2b'); // for API tab
   const [extraDropdownOpen, setExtraDropdownOpen] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [integrating, setIntegrating] = useState(false);
   const [customParams, setCustomParams] = useState([{ name: '', formula: [{ type: 'param', value: '' }], result: null, saved: false }]);
   const [calculating, setCalculating] = useState(null);
   const [saving, setSaving] = useState(null);
@@ -34,7 +30,6 @@ export default function SettingsPage() {
     if (loaded.current) return;
     loaded.current = true;
     api.getDatasets().then(res => setDatasets(res.datasets)).catch(() => { });
-    api.getApiIntegrations().then(res => setIntegrations(res.integrations)).catch(() => { });
   }, []);
 
   const showToast = (msg, type = 'info') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
@@ -153,34 +148,19 @@ export default function SettingsPage() {
     try { await api.deleteDataset(id); setDatasets(prev => prev.filter(d => d.id !== id)); if (selectedDs === id) { setSelectedDs(null); setMappings([]); setExcelColumns([]); } showToast('Dataset removed', 'info'); } catch (e) { showToast(e.message, 'error'); }
   };
 
-  const handleFetchApi = async (integrationId) => {
-    if (!apiDataType) {
-      showToast('Please select B2B or B2C before fetching', 'error');
-      return;
-    }
-    setFetchingApiId(integrationId);
+  const handleIntegrateApi = async () => {
+    setIntegrating(true);
     try {
-      const res = await api.fetchApiIntegration(integrationId, apiDataType);
-      showToast(`✅ Fetched ${res.rowCount} records. Dashboard updated!`, 'success');
+      const res = await api.integrateApi();
+      showToast(`✅ ${res.message || 'API integrated successfully. Dashboard updated!'}`, 'success');
       const dsRes = await api.getDatasets();
       setDatasets(dsRes.datasets);
+      // Auto-navigate to dashboard after short delay
+      setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
     } catch (e) {
-      showToast(`Fetch failed: ${e.message}`, 'error');
+      showToast(`Integration failed: ${e.message}`, 'error');
     }
-    setFetchingApiId(null);
-  };
-
-  const handleSaveApi = async () => {
-    try { const res = await api.saveApiIntegration(apiForm); setIntegrations(prev => [res.integration, ...prev]); setApiForm({ name: '', endpoint_url: '', method: 'GET', auth_type: 'none' }); showToast('API integration saved', 'success'); } catch (e) { showToast(e.message, 'error'); }
-  };
-
-  const handleDeleteApi = async (id) => {
-    try {
-      await api.deleteApiIntegration(id);
-      setIntegrations(prev => prev.filter(ig => ig.id !== id));
-      setDeleteConfirm(null);
-      showToast('API integration deleted', 'info');
-    } catch (e) { showToast(e.message, 'error'); }
+    setIntegrating(false);
   };
 
   // Load excel columns for custom param builder
@@ -188,7 +168,7 @@ export default function SettingsPage() {
     if (tab === 'params') {
       const activeDs = datasets.find(d => d.status === 'active');
       if (activeDs) {
-        api.getMappings(activeDs.id).then(res => setAllExcelCols(res.excel_columns || [])).catch(() => {});
+        api.getMappings(activeDs.id).then(res => setAllExcelCols(res.excel_columns || [])).catch(() => { });
       }
     }
   }, [tab, datasets]);
@@ -529,69 +509,45 @@ export default function SettingsPage() {
       )}
 
       {tab === 'api' && (
-        <div>
-          {/* API Data Type Selector */}
-          <div className="data-type-selector" style={{ marginBottom: 16 }}>
-            <div className="data-type-label">Select Data Type for API Fetch</div>
-            <div className="data-type-buttons">
-              <button
-                className={`data-type-btn ${apiDataType === 'b2b' ? 'active b2b' : ''}`}
-                onClick={() => setApiDataType('b2b')}
-              >
-                <span className="data-type-icon">🏢</span>
-                <span className="data-type-text">B2B</span>
-              </button>
-              <button
-                className={`data-type-btn ${apiDataType === 'b2c' ? 'active b2c' : ''}`}
-                onClick={() => setApiDataType('b2c')}
-              >
-                <span className="data-type-icon">🛒</span>
-                <span className="data-type-text">B2C</span>
-              </button>
-            </div>
+        <div className="chart-card" style={{ textAlign: 'center', padding: '48px 32px' }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>🔗</div>
+          <div className="chart-title" style={{ fontSize: 22, marginBottom: 8 }}>API Integration</div>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, maxWidth: 480, margin: '0 auto 28px', lineHeight: 1.7 }}>
+            Connect to your external data source with one click. The backend will fetch data from
+            the configured API, process the response, and automatically update your dashboard KPIs and charts.
+          </p>
+          <button
+            className="btn btn-primary"
+            onClick={handleIntegrateApi}
+            disabled={integrating}
+            style={{
+              padding: '14px 40px',
+              fontSize: 16,
+              fontWeight: 600,
+              borderRadius: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 10,
+              transition: 'all 0.2s ease',
+              boxShadow: integrating ? 'none' : '0 4px 14px rgba(99, 102, 241, 0.35)',
+            }}
+          >
+            {integrating ? (
+              <>
+                <span className="dash-spinner" style={{ width: 20, height: 20, borderWidth: 2 }} />
+                Integrating...
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 20 }}>⚡</span>
+                Integrate API
+              </>
+            )}
+          </button>
+          <div style={{ marginTop: 28, padding: 16, background: 'rgba(99,102,241,0.06)', borderRadius: 10, fontSize: 13, color: 'var(--text-muted)', maxWidth: 500, margin: '28px auto 0' }}>
+            <strong>ℹ️ Configuration:</strong> API URL and credentials are managed in the server <code>.env</code> file.
+            Contact your administrator to update the external API endpoint.
           </div>
-
-          <div className="chart-card" style={{ marginBottom: 16 }}>
-            <div className="chart-title">➕ Add API Integration</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div className="form-group"><label className="form-label">Name</label><input className="form-input" placeholder="My API" value={apiForm.name} onChange={e => setApiForm({ ...apiForm, name: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Endpoint URL</label><input className="form-input" placeholder="https://api.example.com/data" value={apiForm.endpoint_url} onChange={e => setApiForm({ ...apiForm, endpoint_url: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">Method</label><select className="form-select" value={apiForm.method} onChange={e => setApiForm({ ...apiForm, method: e.target.value })}><option>GET</option><option>POST</option><option>PUT</option></select></div>
-              <div className="form-group"><label className="form-label">Auth Type</label><select className="form-select" value={apiForm.auth_type} onChange={e => setApiForm({ ...apiForm, auth_type: e.target.value })}><option value="none">None</option><option value="bearer">Bearer Token</option><option value="api_key">API Key</option><option value="basic">Basic Auth</option></select></div>
-            </div>
-            <button className="btn btn-primary" onClick={handleSaveApi} style={{ marginTop: 12 }}>Save Integration</button>
-          </div>
-          {integrations.length > 0 && (
-            <div className="chart-card">
-              <div className="chart-title">🔗 Saved Integrations</div>
-              {integrations.map(ig => {
-                const isActive = ig.last_synced_at && datasets.some(d => d.status === 'active');
-                return (
-                  <div key={ig.id} className="api-ig-row">
-                    <div className="api-ig-info">
-                      <span className="api-ig-name">{ig.name}</span>
-                      <span className="api-ig-url">{ig.endpoint_url}</span>
-                      {ig.last_synced_at && (
-                        <span className="api-ig-sync">Synced: {new Date(ig.last_synced_at).toLocaleString()}</span>
-                      )}
-                    </div>
-                    <div className="api-ig-actions">
-                      <span className={`api-ig-status ${isActive ? 'active' : ''}`}>{isActive ? '🟢 Active' : '⚪ Not Active'}</span>
-                      <span className="badge badge-auto">{ig.method}</span>
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handleFetchApi(ig.id)}
-                        disabled={fetchingApiId === ig.id}
-                      >
-                        {fetchingApiId === ig.id ? '⏳ Fetching...' : `⚡ Fetch as ${apiDataType.toUpperCase()}`}
-                      </button>
-                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteConfirm(ig)}>🗑 Delete</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 
@@ -734,24 +690,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Delete API Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="rpt-modal-overlay" onClick={() => setDeleteConfirm(null)}>
-          <div className="rpt-modal" onClick={e => e.stopPropagation()}>
-            <div className="rpt-modal-title">🗑 Delete API Integration?</div>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>
-              You are about to remove: <strong>{deleteConfirm.name}</strong>
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 20 }}>
-              This will delete stored tokens, mappings, and connection state.
-            </p>
-            <div className="rpt-modal-actions">
-              <button className="btn btn-secondary" onClick={() => setDeleteConfirm(null)}>Cancel</button>
-              <button className="btn btn-danger" onClick={() => handleDeleteApi(deleteConfirm.id)}>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {toast && <div className={`toast toast-${toast.type}`}>{toast.msg}</div>}
     </div>
