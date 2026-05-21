@@ -65,7 +65,7 @@ export default function Layout() {
         <header className="topbar">
           <div className="topbar-left">
             <button className="theme-toggle" onClick={() => setMobileOpen(!mobileOpen)} style={{ display: 'none' }} id="mobile-menu">☰</button>
-            <h1 className="topbar-title">Command Centre</h1>
+            {/* <h1 className="topbar-title">Command Centre</h1> */}
           </div>
           <div className="topbar-right">
             <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
