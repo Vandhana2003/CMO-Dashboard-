@@ -3,6 +3,7 @@ const path = require('path');
 const { query } = require('../config/db');
 const { parseExcel, mergeHeaders, autoMapColumns, applyMappings, validateMappings, generateMappedExcel } = require('../utils/excelParser');
 const { calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs, SYSTEM_PARAMETERS, getParametersForType } = require('../utils/formulas');
+const { fetchExternalData } = require('../services/externalApiService');
 
 // Multer setup for file uploads
 const storage = multer.memoryStorage();
@@ -634,4 +635,144 @@ const saveCustomParam = async (req, res) => {
   }
 };
 
-module.exports = { upload, getSystemParameters, getDatasets, uploadExcel, appendToDataset, getMappings, updateMapping, updateDatasetType, validateDataset, downloadMappedExcel, saveAndProceed, deleteDataset, saveApiIntegration, getApiIntegrations, fetchAndActivateApi, deleteApiIntegration, calculateCustomParam, saveCustomParam };
+/**
+ * POST /settings/integrate-api
+ * Single-button external API integration.
+ * Calls the external API configured in .env, processes response,
+ * creates a dataset, auto-maps columns, calculates KPIs, and activates.
+ * Frontend only triggers this endpoint — no API logic in frontend.
+ */
+const integrateExternalApi = async (req, res) => {
+  try {
+    // 1. Call external API via service
+    let rawData;
+    try {
+      rawData = await fetchExternalData();
+    } catch (apiErr) {
+      console.warn('[integrateExternalApi] External API error:', apiErr.message);
+      return res.status(502).json({ error: apiErr.message });
+    }
+
+    // 2. Normalize: find the array of rows in the response
+    let rows = [];
+    if (Array.isArray(rawData)) {
+      rows = rawData;
+    } else if (typeof rawData === 'object' && rawData !== null) {
+      // Try to find the first array value in the response object
+      const arrayKey = Object.keys(rawData).find(k => Array.isArray(rawData[k]));
+      if (arrayKey) {
+        rows = rawData[arrayKey];
+      } else {
+        // If it's a single object with data fields, wrap it as a single-row dataset
+        rows = [rawData];
+      }
+    }
+
+    if (rows.length === 0) {
+      return res.status(422).json({ error: 'External API returned 0 records.' });
+    }
+
+    const headers = Object.keys(rows[0]);
+
+    // 3. Determine data type — try to auto-detect from the response, default to 'b2b'
+    const dataType = 'b2b';
+
+    // 4. Create dataset record
+    const ds = await query(
+      'INSERT INTO datasets (user_id, source_type, file_name, original_name, status, data_type) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [req.user.id, 'api', 'External API Integration', 'External API Integration', 'uploaded', dataType]
+    );
+    const datasetId = ds.rows[0].id;
+
+    // 5. Insert rows into dataset_rows
+    for (let i = 0; i < rows.length; i++) {
+      await query(
+        'INSERT INTO dataset_rows (dataset_id, row_index, row_data) VALUES ($1, $2, $3)',
+        [datasetId, i, JSON.stringify(rows[i])]
+      );
+    }
+
+    // 6. Auto-map columns (system-first, filtered by data_type)
+    const mappings = autoMapColumns(headers, dataType);
+    for (const m of mappings) {
+      await query(
+        'INSERT INTO column_mappings (dataset_id, source_column, system_parameter, match_status, extra_columns) VALUES ($1, $2, $3, $4, $5)',
+        [datasetId, m.excel_column || '', m.system_parameter, m.match_status, JSON.stringify([])]
+      );
+    }
+
+    // 7. Deactivate all other datasets, activate this one
+    await query("UPDATE datasets SET status = 'validated' WHERE status = 'active'");
+    await query("UPDATE datasets SET status = 'active' WHERE id = $1", [datasetId]);
+
+    // 8. Apply mappings and run KPI engine
+    const mappingsForApply = mappings.map(m => ({
+      source_column: m.excel_column || '',
+      system_parameter: m.system_parameter,
+      match_status: m.match_status,
+      extra_columns: []
+    }));
+    const mappedRows = applyMappings(rows, mappingsForApply);
+    const dashKpis = calcDashboardKPIs(mappedRows);
+
+    let b2bKpis = null;
+    let b2cKpis = null;
+    if (dataType === 'b2b') {
+      b2bKpis = calcB2BKPIs(mappedRows);
+    } else if (dataType === 'b2c') {
+      b2cKpis = calcB2CKPIs(mappedRows);
+    } else {
+      b2bKpis = calcB2BKPIs(mappedRows);
+      b2cKpis = calcB2CKPIs(mappedRows);
+    }
+
+    // 9. Cache KPIs in kpi_cache
+    for (const [name, value] of Object.entries(dashKpis)) {
+      await query(
+        `INSERT INTO kpi_cache (dataset_id, section, kpi_name, kpi_value) VALUES ($1, 'dashboard', $2, $3) ON CONFLICT (dataset_id, section, kpi_name) DO UPDATE SET kpi_value = $3, calculated_at = NOW()`,
+        [datasetId, name, value]
+      );
+    }
+    if (b2bKpis) {
+      for (const [name, value] of Object.entries(b2bKpis)) {
+        await query(
+          `INSERT INTO kpi_cache (dataset_id, section, kpi_name, kpi_value) VALUES ($1, 'b2b', $2, $3) ON CONFLICT (dataset_id, section, kpi_name) DO UPDATE SET kpi_value = $3, calculated_at = NOW()`,
+          [datasetId, name, value]
+        );
+      }
+    }
+    if (b2cKpis) {
+      for (const [name, value] of Object.entries(b2cKpis)) {
+        await query(
+          `INSERT INTO kpi_cache (dataset_id, section, kpi_name, kpi_value) VALUES ($1, 'b2c', $2, $3) ON CONFLICT (dataset_id, section, kpi_name) DO UPDATE SET kpi_value = $3, calculated_at = NOW()`,
+          [datasetId, name, value]
+        );
+      }
+    }
+
+    // 10. Update mapped rows in DB with mapped keys
+    for (let i = 0; i < mappedRows.length; i++) {
+      await query(
+        'UPDATE dataset_rows SET row_data = $1 WHERE dataset_id = $2 AND row_index = $3',
+        [JSON.stringify(mappedRows[i]), datasetId, i]
+      );
+    }
+
+    console.log(`✅ External API integrated: ${rows.length} records, dataset ${datasetId} activated.`);
+
+    res.json({
+      message: `Successfully integrated ${rows.length} records from external API. Dashboard updated.`,
+      datasetId,
+      rowCount: rows.length,
+      dashKpis,
+      b2bKpis,
+      b2cKpis,
+      data_type: dataType
+    });
+  } catch (err) {
+    console.error('integrateExternalApi error:', err);
+    res.status(500).json({ error: err.message || 'Failed to integrate external API data.' });
+  }
+};
+
+module.exports = { upload, getSystemParameters, getDatasets, uploadExcel, appendToDataset, getMappings, updateMapping, updateDatasetType, validateDataset, downloadMappedExcel, saveAndProceed, deleteDataset, saveApiIntegration, getApiIntegrations, fetchAndActivateApi, deleteApiIntegration, calculateCustomParam, saveCustomParam, integrateExternalApi };
