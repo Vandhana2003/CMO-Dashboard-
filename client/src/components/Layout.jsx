@@ -34,8 +34,12 @@ export default function Layout() {
           <div className="sidebar-logo">C</div>
           <span className="sidebar-title">CMO Centre</span>
         </div>
-        <button className="sidebar-toggle" onClick={() => setCollapsed(!collapsed)}>{collapsed ? '→' : '←'}</button>
-        <nav className="nav-section">
+<button
+  className="sidebar-toggle"
+  onClick={() => setCollapsed(!collapsed)}
+>
+  {collapsed ? '›' : '‹'}
+</button>        <nav className="nav-section">
           <div className="nav-section-title">Main</div>
           <ul className="nav-items">
             {NAV_MAIN.map(item => (
