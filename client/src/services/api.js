@@ -154,8 +154,8 @@ export const api = {
   getApiIntegrations: () => request('/settings/api-integrations'),
   fetchApiIntegration: (id, dataType) => request(`/settings/api-integrations/${id}/fetch`, { method: 'POST', body: { data_type: dataType } }),
   deleteApiIntegration: (id) => request(`/settings/api-integrations/${id}`, { method: 'DELETE' }),
-  calculateCustomParam: (formula) => request('/settings/custom-param/calculate', { method: 'POST', body: { formula } }),
-  saveCustomParam: (name, formula, result) => request('/settings/custom-param/save', { method: 'POST', body: { name, formula, result } }),
+  calculateCustomParam: (formula, datasetId) => request('/settings/custom-param/calculate', { method: 'POST', body: { formula, dataset_id: datasetId } }),
+  saveCustomParam: (name, formula, result, datasetId) => request('/settings/custom-param/save', { method: 'POST', body: { name, formula, result, dataset_id: datasetId } }),
 
   // External API Integration — triggers backend to call external API and populate dashboard
   integrateApi: () => request('/settings/integrate-api', { method: 'POST' }),

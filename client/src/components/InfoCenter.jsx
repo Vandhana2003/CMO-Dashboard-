@@ -86,7 +86,7 @@ export default function InfoCenter({ inline, onClose }) {
     <div>
       <div className="tabs" style={{ marginBottom: 16 }}>
         <button className={`tab ${tab === 'parameters' ? 'active' : ''}`} onClick={() => setTab('parameters')}>📋 Parameters</button>
-        <button className={`tab ${tab === 'metrics' ? 'active' : ''}`} onClick={() => setTab('metrics')}>📊 Metrics</button>
+        <button className={`tab ${tab === 'metrics' ? 'active' : ''}`} onClick={() => setTab('metrics')}><><i className="bi bi-bar-chart-fill"></i> Metrics</></button>
       </div>
       {tab === 'parameters' && <AccordionList items={PARAMETERS} />}
       {tab === 'metrics' && <AccordionList items={METRICS} />}
@@ -99,8 +99,8 @@ export default function InfoCenter({ inline, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">ℹ️ Info Centre</h2>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <h2 className="modal-title"><><i className="bi bi-info-circle-fill"></i> Info Centre</></h2>
+          <button className="modal-close" onClick={onClose}><i className="bi bi-x-lg"></i></button>
         </div>
         <div className="modal-body">{content}</div>
       </div>

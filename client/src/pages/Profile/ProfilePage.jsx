@@ -51,10 +51,10 @@ export default function ProfilePage() {
           <label className="form-label">Password</label>
           <div className="password-wrapper">
             <input className="form-input" type={showPassword ? 'text' : 'password'} value="••••••••" disabled style={{ opacity: 0.6 }} />
-            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '🙈' : '👁️'}</button>
+            <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}</button>
           </div>
         </div>
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : '💾 Save Changes'}</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : <><i className="bi bi-check-lg"></i> Save Changes</>}</button>
       </div>
       {toast && <div className="toast toast-success">{toast}</div>}
     </div>

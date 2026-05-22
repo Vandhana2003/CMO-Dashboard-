@@ -3,16 +3,17 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import InfoCenter from './InfoCenter';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 
 const NAV_MAIN = [
-  { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { path: '/dashboard', label: 'Dashboard', icon: <i className="bi bi-grid-1x2-fill"></i> },
 ];
 const NAV_MGMT = [
-  { path: '/users', label: 'Users', icon: '👥', restricted: true },
-  { path: '/report', label: 'Report', icon: '📄', restricted: true },
-  { path: '/account', label: 'Account', icon: '🔐', restricted: true },
-  { path: '/settings', label: 'Settings', icon: '⚙️', restricted: true },
-  { path: '/info', label: 'Info', icon: 'ℹ️' },
+  { path: '/users', label: 'Users', icon: <i className="bi bi-people-fill"></i>, restricted: true },
+  { path: '/report', label: 'Report', icon: <i className="bi bi-file-earmark-text-fill"></i>, restricted: true },
+  // { path: '/account', label: 'Account', icon: <i className="bi bi-person-badge-fill"></i>, restricted: true },
+  { path: '/settings', label: 'Settings', icon: <i className="bi bi-gear-fill"></i>, restricted: true },
+  { path: '/info', label: 'Info', icon: <i className="bi bi-info-circle-fill"></i> },
 ];
 
 export default function Layout() {
@@ -35,25 +36,25 @@ export default function Layout() {
           <span className="sidebar-title">CMO</span>
         </div> */}
 
-     <div className="sidebar-header">
+        <div className="sidebar-header">
 
-  <div className="sidebar-brand">
+          <div className="sidebar-brand">
 
-    {/* Full Logo */}
-    <img
-      src="https://plumb5.com/assets/img/logo.png"
-      alt="Plumb5 Logo"
-      className="sidebar-logo-img full-logo"
-    />
+            {/* Full Logo */}
+            <img
+              src="https://plumb5.com/assets/img/logo.png"
+              alt="Plumb5 Logo"
+              className="sidebar-logo-img full-logo"
+            />
 
-    {/* Small Logo for Collapse */}
-    <div className="sidebar-mini-logo">
-      P
-    </div>
+            {/* Small Logo for Collapse */}
+            <div className="sidebar-mini-logo">
+              P
+            </div>
 
-  </div>
+          </div>
 
-</div>
+        </div>
         <button
           className="sidebar-toggle"
           onClick={() => setCollapsed(!collapsed)}
@@ -93,7 +94,7 @@ export default function Layout() {
           </div>
           <div className="topbar-right">
             <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
-              {theme === 'dark' ? '☀️' : '🌙'}
+              {theme === 'dark' ? <i className="bi bi-sun-fill"></i> : <i className="bi bi-moon-stars-fill"></i>}
             </button>
             <div style={{ position: 'relative' }}>
               <button className="profile-btn" onClick={() => setProfileOpen(!profileOpen)}>
@@ -108,10 +109,10 @@ export default function Layout() {
                     <div className="profile-dropdown-email">{user?.email}</div>
                   </div>
                   <button className="profile-dropdown-item" onClick={() => { navigate('/profile'); setProfileOpen(false); }}>
-                    👤 Profile
+                    <i className="bi bi-person-circle"></i> Profile
                   </button>
                   <button className="profile-dropdown-item danger" onClick={handleLogout}>
-                    🚪 Logout
+                    <i className="bi bi-box-arrow-right"></i> Logout
                   </button>
                 </div>
               )}

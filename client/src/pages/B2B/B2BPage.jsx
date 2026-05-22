@@ -95,7 +95,7 @@ export default function B2BPage() {
   if (!data?.hasData) return (
     <div className="page">
       <div className="dash-header"><div><h1 className="page-title">B2B Analytics</h1><p className="page-subtitle">Business-to-business performance metrics</p></div></div>
-      <div className="dash-empty"><div className="dash-empty-icon">🏢</div><h3>No B2B data yet</h3><p>Upload a dataset in Settings to populate B2B analytics</p></div>
+      <div className="dash-empty"><div className="dash-empty-icon"><i className="bi bi-building-fill"></i></div><h3>No B2B data yet</h3><p>Upload a dataset in Settings to populate B2B analytics</p></div>
     </div>
   );
 
@@ -198,7 +198,7 @@ export default function B2BPage() {
 
       {insights?.length > 0 && (
         <div className="insights-section">
-          <div className="insights-title">🔍 Key Insights</div>
+          <div className="insights-title"><><i className="bi bi-search"></i> Key Insights</></div>
           {insights.map((ins, i) => (
             <div key={i} className={`insight-item ${ins.type}`}>
               <div className="insight-dot" /><span>{ins.text}</span>

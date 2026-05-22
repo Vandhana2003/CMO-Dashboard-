@@ -55,7 +55,7 @@ export default function LoginPage() {
             <label className="form-label">Password</label>
             <div className="password-wrapper">
               <input className="form-input" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
-              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? '🙈' : '👁️'}</button>
+              <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <i className="bi bi-eye-slash-fill"></i> : <i className="bi bi-eye-fill"></i>}</button>
             </div>
           </div>
           {!isLogin && (

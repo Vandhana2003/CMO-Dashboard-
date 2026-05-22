@@ -81,7 +81,7 @@ export default function B2CPage() {
   if (!data?.hasData) return (
     <div className="page">
       <div className="dash-header"><div><h1 className="page-title">B2C Analytics</h1><p className="page-subtitle">Consumer performance metrics</p></div></div>
-      <div className="dash-empty"><div className="dash-empty-icon">🛒</div><h3>No B2C data yet</h3><p>Upload a dataset in Settings to populate B2C analytics</p></div>
+      <div className="dash-empty"><div className="dash-empty-icon"><i className="bi bi-cart-fill"></i></div><h3>No B2C data yet</h3><p>Upload a dataset in Settings to populate B2C analytics</p></div>
     </div>
   );
 
@@ -90,9 +90,9 @@ export default function B2CPage() {
   const kpiCards = [
     { label: 'Lifetime Value (LTV)',   value: `$${(kpis.ltv                 || 0).toLocaleString()}`, icon: '💎', g: 'g1' },
     { label: 'Repeat Purchase Rate',  value: `${kpis.repeat_purchase_rate  || 0}%`,                  icon: '🔁', g: 'g2' },
-    { label: 'Avg Order Value',       value: `$${(kpis.aov                 || 0).toLocaleString()}`, icon: '🛍️', g: 'g3' },
+    { label: 'Avg Order Value',       value: `$${(kpis.aov                 || 0).toLocaleString()}`, icon: (() => <i className="bi bi-bag-fill"></i>)(), g: 'g3' },
     { label: 'Cart Abandonment',      value: `${kpis.cart_abandonment_rate || 0}%`,                  icon: '🛒', g: 'g4' },
-    { label: 'Purchase Frequency',    value: `${kpis.purchase_frequency    || 0}x`,                  icon: '📊', g: 'g5' },
+    { label: 'Purchase Frequency',    value: `${kpis.purchase_frequency    || 0}x`,                  icon: (() => <i className="bi bi-bar-chart-fill"></i>)(), g: 'g5' },
   ];
 
   /* Repeat Purchase Trend */
@@ -174,12 +174,12 @@ export default function B2CPage() {
               </div>
             </div>
           </div>
-        ) : <div className="ccard ccard-empty"><span>🛒</span><p>Cart abandonment data not available</p></div>}
+        ) : <div className="ccard ccard-empty"><span><i className="bi bi-cart-fill"></i></span><p>Cart abandonment data not available</p></div>}
       </div>
 
       {insights?.length > 0 && (
         <div className="insights-section">
-          <div className="insights-title">🔍 Key Insights</div>
+          <div className="insights-title"><><i className="bi bi-search"></i> Key Insights</></div>
           {insights.map((ins, i) => (
             <div key={i} className={`insight-item ${ins.type}`}>
               <div className="insight-dot" /><span>{ins.text}</span>

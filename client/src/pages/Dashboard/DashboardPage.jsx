@@ -95,7 +95,7 @@ export default function DashboardPage() {
     {l:'Marketing Spend',v:`$${(dashKpis.marketing_spend||0).toLocaleString()}`,i:'💸'},
     {l:'Blended ROI',v:`${dashKpis.blended_roi||0}%`,i:'📈'},
     {l:'CAC',v:`$${(dashKpis.cac||0).toLocaleString()}`,i:'🎯'},
-    {l:'Total Leads',v:(dashKpis.total_leads||0).toLocaleString(),i:'👥'},
+    {l:'Total Leads',v:(dashKpis.total_leads||0).toLocaleString(),i:(() => <i className="bi bi-people-fill"></i>)()},
     {l:'Conversion Rate',v:`${dashKpis.conversion_rate||0}%`,i:'🔄'},
     {l:'CPL',v:`$${(dashKpis.cpl||0).toLocaleString()}`,i:'📉'},
   ];
@@ -111,9 +111,9 @@ export default function DashboardPage() {
   const b2cCards = [
     {l:'Lifetime Value (LTV)',v:`$${(b2cKpis.ltv||0).toLocaleString()}`,i:'💎'},
     {l:'Repeat Purchase Rate',v:`${b2cKpis.repeat_purchase_rate||0}%`,i:'🔁'},
-    {l:'Avg Order Value',v:`$${(b2cKpis.aov||0).toLocaleString()}`,i:'🛍️'},
+    {l:'Avg Order Value',v:`$${(b2cKpis.aov||0).toLocaleString()}`,i:(() => <i className="bi bi-bag-fill"></i>)()},
     {l:'Cart Abandonment',v:`${b2cKpis.cart_abandonment_rate||0}%`,i:'🛒'},
-    {l:'Purchase Frequency',v:`${b2cKpis.purchase_frequency||0}x`,i:'📊'},
+    {l:'Purchase Frequency',v:`${b2cKpis.purchase_frequency||0}x`,i:(() => <i className="bi bi-bar-chart-fill"></i>)()},
   ];
   const extraCards = dt==='b2b' ? b2bCards : dt==='b2c' ? b2cCards : [];
 
@@ -236,10 +236,10 @@ export default function DashboardPage() {
 </div>
         {/* Chart 4: Channel ROI */}
         <div className="ccard">
-          <div className="ccard-title">📊 Channel ROI</div>
+          <div className="ccard-title"><><i className="bi bi-bar-chart-fill"></i> Channel ROI</></div>
           <div className="ccard-body">
             {hasROI ? <Bar data={{labels:roi.labels,datasets:[{label:'ROI %',data:roi.data,backgroundColor:roi.labels.map((_,i)=>PAL[i%PAL.length]),borderRadius:7,barThickness:28}]}} options={mkBar({horizontal:true,xFmt:v=>`${v}%`})} />
-            : <div className="ccard-empty-inner"><span>📊</span><p>No channel ROI data yet</p></div>}
+            : <div className="ccard-empty-inner"><span><i className="bi bi-bar-chart-fill"></i></span><p>No channel ROI data yet</p></div>}
           </div>
         </div>
         {/* Charts 5-6: B2B or B2C specific */}
@@ -330,7 +330,7 @@ export default function DashboardPage() {
       {/* Insights */}
       {insights?.length>0 && (
         <div className="insights-section" style={{marginTop:24}}>
-          <div className="insights-title">🔍 Key Insights</div>
+          <div className="insights-title"><><i className="bi bi-search"></i> Key Insights</></div>
           {insights.map((ins,i)=>(<div key={i} className={`insight-item ${ins.type}`}><div className="insight-dot"/><span>{ins.text}</span></div>))}
         </div>
       )}
