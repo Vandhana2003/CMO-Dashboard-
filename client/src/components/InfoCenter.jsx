@@ -11,7 +11,7 @@ const PARAMETERS = [
   { name: 'Attributed Revenue per Channel', desc: 'Revenue credited to a specific marketing or sales channel. Helps identify which channels generate the most value.', usedIn: ['Dashboard'] },
   { name: 'Number of SQLs', desc: 'Sales Qualified Leads — leads identified by the sales team as highly likely to become customers.', usedIn: ['B2B'] },
   { name: 'Total Days to Close', desc: 'Total number of days taken to close all sales deals. Used to measure sales cycle efficiency.', usedIn: ['B2B'] },
-  { name: 'Number of Deals', desc: 'Total count of sales deals or opportunities created during the selected period.', usedIn: ['B2B'] },
+  { name: 'Number of Deals', desc: 'Total count of sales deals or opportunities created during the selected period.', usedIn: ['B2B'] }, 
   { name: 'Won Deals', desc: 'Number of successfully closed deals that converted into customers or revenue.', usedIn: ['B2B'] },
   { name: 'Total Opportunities', desc: 'Total sales opportunities available in the pipeline, including won, lost, and active deals.', usedIn: ['B2B'] },
   { name: 'Customers Lost', desc: 'Number of customers who stopped purchasing or became inactive during the selected period.', usedIn: ['B2B'] },
