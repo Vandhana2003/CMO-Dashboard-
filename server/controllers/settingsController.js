@@ -1,4 +1,4 @@
-const multer = require('multer'); 
+const multer = require('multer');  
 const path = require('path');
 const { query } = require('../config/db');
 const { parseExcel, mergeHeaders, autoMapColumns, applyMappings, validateMappings, generateMappedExcel } = require('../utils/excelParser');
