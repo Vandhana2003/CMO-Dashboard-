@@ -6,7 +6,7 @@ const { calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs, SYSTEM_PARAMETERS, getParam
 const { fetchExternalData } = require('../services/externalApiService'); 
 
 // Multer setup for file uploads
-const storage = multer.memoryStorage();
+const storage = multer.memoryStorage(); 
 const upload = multer({
   storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
