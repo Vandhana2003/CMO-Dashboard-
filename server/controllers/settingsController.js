@@ -1,6 +1,6 @@
 const multer = require('multer');         
 const path = require('path'); 
-const { query } = require('../config/db');
+const { query } = require('../config/db'); 
 const { parseExcel, mergeHeaders, autoMapColumns, applyMappings, validateMappings, generateMappedExcel } = require('../utils/excelParser');
 const { calcDashboardKPIs, calcB2BKPIs, calcB2CKPIs, SYSTEM_PARAMETERS, getParametersForType } = require('../utils/formulas');
 const { fetchExternalData } = require('../services/externalApiService'); 
