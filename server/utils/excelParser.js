@@ -12,7 +12,7 @@ const SYSTEM_PARAM_SYNONYMS = {
   'cogs': ['cost of goods sold', 'cost of goods', 'cogs cost'],
   'total customers': ['customers total', 'customer count'],
   'total orders': ['orders total', 'order count'],
-};
+}; 
 
 function words(str) {
   return normalizeKey(str).split(' ').filter(Boolean);
