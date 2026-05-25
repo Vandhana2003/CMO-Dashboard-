@@ -52,7 +52,7 @@ const METRICS = [
   { name: 'Purchase Frequency', desc: 'Average number of purchases made by each customer during a selected period.', usedIn: ['B2C'] },
 ];
 
-const tagColor = { Dashboard: 'var(--accent)', B2B: 'var(--warning)', B2C: 'var(--success)' };
+const tagColor = { Dashboard: 'var(--accent)', B2B: 'var(--warning)', B2C: 'var(--success)' }; 
 
 function AccordionList({ items }) {
   const [open, setOpen] = useState(null);
