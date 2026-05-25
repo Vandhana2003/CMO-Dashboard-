@@ -79,9 +79,11 @@ export default function DashboardPage() {
         const res = await api.integrateApi();
         const res1 = await api.integrateApi1();
         const res2 = await api.integrateApi2();
+        const res3 = await api.integrateApi3();
+        const res4 = await api.integrateApi4();
 
 
-        console.log('External API Response1:', res2);
+        // console.log('External API Response3:', res3);
 
         if (res?.totalCount) {
 
@@ -101,6 +103,61 @@ export default function DashboardPage() {
           const totalDays = res2.totalDaysToClose.reduce((sum, item) => sum + (item.totalDaysToClose || 0), 0);
           const avgDaysToClose = Math.floor(totalDays / (res.totalCount || 1));
           sessionStorage.setItem('daystoclose', avgDaysToClose);
+        }
+        if (res3.data[0].repeatvisitors) {
+          const repeatvisit = res3.data.reduce((sum, item) => sum + (item.repeatvisitors || 0), 0);
+          const reepatvisitpercent = Math.floor((repeatvisit / (res.totalCount || 1)) * 100);
+          sessionStorage.setItem('reepatvisitpercent', reepatvisitpercent);
+        }
+        // if (res4.channelWiseCount[0].data[0].uniquevisit) {
+        //   const totalUniqueVisit = res4.channelWiseCount.reduce((total, channel) => {
+        //     const channelTotal = channel.data.reduce((sum, item) => {
+        //       return sum + (item.uniquevisit || 0);
+        //     }, 0);
+
+        //     return total + channelTotal;
+        //   }, 0);
+        //   let cpl = 20000 / totalUniqueVisit;
+        //   sessionStorage.setItem('CPL', cpl);
+        // }
+        if (res4.channelWiseCount?.length > 0) {
+
+          // total unique visits
+          const totalUniqueVisit = res4.channelWiseCount.reduce((total, channel) => {
+            const channelTotal = channel.data.reduce((sum, item) => {
+              return sum + (item.uniquevisit || 0);
+            }, 0);
+
+            return total + channelTotal;
+          }, 0);
+
+          // overall CPL
+          let cpl = 20000 / totalUniqueVisit;
+
+          sessionStorage.setItem('CPL', cpl);
+
+          // individual channel counts + CPL
+          const channelWiseCpl = res4.channelWiseCount.map(channel => {
+
+            const totalVisits = channel.data.reduce((sum, item) => {
+              return sum + (item.uniquevisit || 0);
+            }, 0);
+
+            return {
+              channel: channel.channel,
+              uniquevisit: totalVisits,
+              cpl: totalVisits > 0
+                ? Number((5000 / totalVisits).toFixed(2))
+                : 0
+            };
+          });
+
+          sessionStorage.setItem(
+            'channelWiseCpl',
+            JSON.stringify(channelWiseCpl)
+          );
+
+          console.log(channelWiseCpl);
         }
 
       } catch (err) {
@@ -153,7 +210,7 @@ export default function DashboardPage() {
     { l: 'CAC', v: `$${(dashKpis.cac || 0).toLocaleString()}`, i: '🎯' },
     { l: 'Total Leads', v: (dashKpis.total_leads || Number(sessionStorage.getItem('totalCount')) || 0).toLocaleString(), i: '👥' },
     { l: 'Conversion Rate', v: `${dashKpis.conversion_rate || 0}%`, i: '🔄' },
-    { l: 'CPL', v: `$${(dashKpis.cpl || 0).toLocaleString()}`, i: '📉' },
+    { l: 'CPL', v: `$${(dashKpis.cpl || Number(sessionStorage.getItem('CPL')) || 0).toLocaleString()}`, i: '📉' },
   ];
   // B2B 5 KPIs
   const b2bCards = [
@@ -166,7 +223,7 @@ export default function DashboardPage() {
   // B2C 5 KPIs
   const b2cCards = [
     { l: 'Lifetime Value (LTV)', v: `$${(b2cKpis.ltv || 0).toLocaleString()}`, i: '💎' },
-    { l: 'Repeat Purchase Rate', v: `${b2cKpis.repeat_purchase_rate || 0}%`, i: '🔁' },
+    { l: 'Repeat Purchase Rate', v: `${b2cKpis.repeat_purchase_rate || Number(sessionStorage.getItem('reepatvisitpercent')) || 0}%`, i: '🔁' },
     { l: 'Avg Order Value', v: `$${(b2cKpis.aov || 0).toLocaleString()}`, i: '🛍️' },
     { l: 'Cart Abandonment', v: `${b2cKpis.cart_abandonment_rate || 0}%`, i: '🛒' },
     { l: 'Purchase Frequency', v: `${b2cKpis.purchase_frequency || 0}x`, i: '📊' },
@@ -180,15 +237,17 @@ export default function DashboardPage() {
   const hasCL = cacLtv?.labels?.length > 0;
   const fun = dashCharts.conversion_funnel;
   const fStages = [
-    { l: 'Leads', v: fun?.leads || 0, c: FC[0] }, { l: 'MQLs', v: fun?.mqls || 0, c: FC[1] },
-    { l: 'SQLs', v: fun?.sqls || 0, c: FC[2] }, { l: 'Customers', v: fun?.customers || 0, c: FC[3] }
+    { l: 'Leads', v: Number(sessionStorage.getItem('totalCount')) || 0, c: FC[0] },
+    { l: 'MQLs', v: fun?.mqls || 0, c: FC[1] },
+    { l: 'SQLs', v: fun?.sqls || 0, c: FC[2] },
+    { l: 'Repeat Visitors', v: Number(sessionStorage.getItem('reepatvisitpercent')) || 0, c: FC[3] }
   ];
   const maxF = Math.max(fStages[0].v, 1);
   const roi = dashCharts.channel_roi;
   const hasROI = roi?.labels?.length > 0;
   // B2B charts
   const cpl = b2bCharts.cpl_by_channel;
-  const hasCpl = cpl?.labels?.length > 0;
+  const hasCpl = Number(sessionStorage.getItem('CPL')) > 0;
   const wrt = b2bCharts.win_rate_trend;
   const hasWrt = wrt?.labels?.length > 0 && wrt?.data?.some(v => v !== 0);
   // B2C charts
@@ -280,10 +339,49 @@ export default function DashboardPage() {
         </div>
         {/* Charts 5-6: B2B or B2C specific */}
         {dt === 'b2b' && (<>
-          <div className="ccard"><div className="ccard-title">💰 CPL by Channel</div><div className="ccard-body">
-            {hasCpl ? <Bar data={{ labels: cpl.labels, datasets: [{ label: 'CPL ($)', data: cpl.data, backgroundColor: cpl.labels.map((_, i) => PAL[i % PAL.length]), borderRadius: 7, barThickness: 34 }] }} options={mkBar({ yFmt: v => `$${v}` })} />
-              : <div className="ccard-empty-inner"><span>💰</span><p>No CPL data yet</p></div>}
-          </div></div>
+          <div className="ccard">
+            <div className="ccard-title">💰 CPL by Channel</div>
+
+            <div className="ccard-body">
+              {hasCpl ? (
+                <Bar
+                  data={{
+                    labels: JSON.parse(
+                      sessionStorage.getItem('channelWiseCpl') || '[]'
+                    ).map(item => item.channel),
+
+                    datasets: [
+                      {
+                        label: 'CPL ($)',
+
+                        data: JSON.parse(
+                          sessionStorage.getItem('channelWiseCpl') || '[]'
+                        ).map(item => item.cpl),
+
+                        backgroundColor: JSON.parse(
+                          sessionStorage.getItem('channelWiseCpl') || '[]'
+                        ).map((_, i) => PAL[i % PAL.length]),
+
+                        borderRadius: 7,
+                        barThickness: 50
+                      }
+                    ]
+                  }}
+
+                  options={mkBar({
+                    horizontal: false,
+                    xFmt: v => v,
+                    yFmt: v => `$${v}`
+                  })}
+                />
+              ) : (
+                <div className="ccard-empty-inner">
+                  <span>💰</span>
+                  <p>No CPL data yet</p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="ccard"><div className="ccard-title">🏆 Win Rate Trend</div><div className="ccard-body">
             {hasWrt ? <Line data={{ labels: wrt.labels, datasets: [{ label: 'Win Rate (%)', data: wrt.data, borderColor: '#10b981', backgroundColor: gradFill('16,185,129'), fill: true, tension: 0.4, borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#10b981', pointBorderColor: '#fff', pointBorderWidth: 2 }] }} options={mkLine(v => `${v}%`)} />
               : <div className="ccard-empty-inner"><span>🏆</span><p>No win rate data yet</p></div>}

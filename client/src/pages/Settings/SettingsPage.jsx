@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { api } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const OPERATORS = ['+', '-', '*', '/', '(', ')'];
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('excel');
   const [datasets, setDatasets] = useState([]);
   const [mappings, setMappings] = useState([]);
@@ -141,7 +143,24 @@ export default function SettingsPage() {
 
   const handleSaveProceed = async () => {
     if (!selectedDs) return;
-    try { await api.saveAndProceed(selectedDs); showToast('Dataset activated! KPIs calculated.', 'success'); const dsRes = await api.getDatasets(); setDatasets(dsRes.datasets); } catch (e) { showToast(e.message, 'error'); }
+
+    try {
+      let respon = await api.saveAndProceed(selectedDs);
+
+      showToast(respon.message, 'success');
+
+      // store selected datatype
+      localStorage.setItem('cmo_data_type', respon.data_type);
+
+      const dsRes = await api.getDatasets();
+      setDatasets(dsRes.datasets);
+
+      // navigate only to dashboard
+      navigate('/dashboard');
+
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
   };
 
   const handleDeleteDs = async (id) => {

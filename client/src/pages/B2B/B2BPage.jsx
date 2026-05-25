@@ -147,7 +147,7 @@ export default function B2BPage() {
     responsive: true, maintainAspectRatio: false,
     animation: { duration: 800, easing: 'easeInOutQuart' },
     interaction: { mode: 'index', intersect: false },
-    plugins: {
+    plugins: { 
       legend: { display: true, position: 'top', labels: { color: '#94a3b8', font: { family: 'Inter', size: 11, weight: 500 }, usePointStyle: true, pointStyle: 'circle', padding: 12, boxWidth: 8 } },
       tooltip: { backgroundColor: 'rgba(10,14,26,0.96)', padding: 14, cornerRadius: 10, titleFont: { family: 'Inter', size: 13, weight: 700 }, bodyFont: { family: 'Inter', size: 12 }, callbacks: { label: ctx => `${ctx.parsed.y}%` } }
     },
