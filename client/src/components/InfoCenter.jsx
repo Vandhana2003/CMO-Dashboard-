@@ -1,4 +1,4 @@
-import React, { useState } from 'react';    
+import React, { useState } from 'react';     
 
 const PARAMETERS = [
   { name: 'PR / Media Contribution', desc: 'Revenue or business impact generated through PR activities, advertisements, influencer campaigns, media promotions, or branding campaigns.', usedIn: ['Dashboard'] },
