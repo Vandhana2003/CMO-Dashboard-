@@ -14,7 +14,7 @@ const NAV_MGMT = [
   // { path: '/account', label: 'Account', icon: <i className="bi bi-person-badge-fill"></i>, restricted: true },
   { path: '/settings', label: 'Settings', icon: <i className="bi bi-gear-fill"></i>, restricted: true },
   { path: '/info', label: 'Info', icon: <i className="bi bi-info-circle-fill"></i> }, 
-];
+]; 
 
 export default function Layout() {
   const { user, logout, hasAccess } = useAuth();
