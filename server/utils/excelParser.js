@@ -1,4 +1,4 @@
-const XLSX = require('xlsx'); 
+const XLSX = require('xlsx')  
 const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./formulas');   
 
 const SYSTEM_PARAM_SYNONYMS = {
