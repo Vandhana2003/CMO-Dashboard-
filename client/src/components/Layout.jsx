@@ -7,7 +7,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
  
 const NAV_MAIN = [
   { path: '/dashboard', label: 'Dashboard', icon: <i className="bi bi-grid-1x2-fill"></i> },
-];  
+];   
 const NAV_MGMT = [
   { path: '/users', label: 'Users', icon: <i className="bi bi-people-fill"></i>, restricted: true },
   { path: '/report', label: 'Report', icon: <i className="bi bi-file-earmark-text-fill"></i>, restricted: true },
