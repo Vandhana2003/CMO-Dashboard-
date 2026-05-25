@@ -152,9 +152,10 @@ export default function SettingsPage() {
     setIntegrating(true);
     try {
       const res = await api.integrateApi();
+      sessionStorage.setItem('totalCount', JSON.stringify(res.totalCount));
       showToast(`✅ ${res.message || 'API integrated successfully. Dashboard updated!'}`, 'success');
-      const dsRes = await api.getDatasets();
-      setDatasets(dsRes.datasets);
+      // const dsRes = await api.getDatasets();
+      // setDatasets(dsRes.datasets);
       // Auto-navigate to dashboard after short delay
       setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
     } catch (e) {
@@ -518,7 +519,7 @@ export default function SettingsPage() {
           </p>
           <button
             className="btn btn-primary"
-            onClick={handleIntegrateApi}
+            // onClick={handleIntegrateApi}
             disabled={integrating}
             style={{
               padding: '14px 40px',

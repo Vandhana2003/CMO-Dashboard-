@@ -76,10 +76,6 @@ const uploadExcel = async (req, res) => {
   }
 };
 
-/**
- * Append additional Excel files to an existing dataset.
- * Merges rows and re-runs auto-mapping with the unified header set.
- */
 const appendToDataset = async (req, res) => {
   try {
     const { datasetId } = req.params;
@@ -354,7 +350,6 @@ const deleteDataset = async (req, res) => {
   }
 };
 
-// Fetch from saved API URL, insert rows, run KPI engine, activate as dataset
 const fetchAndActivateApi = async (req, res) => {
   try {
     const { id } = req.params;
@@ -485,7 +480,6 @@ const fetchAndActivateApi = async (req, res) => {
   }
 };
 
-// API Integration endpoints
 const saveApiIntegration = async (req, res) => {
   try {
     const { name, endpoint_url, method, headers, auth_type, auth_credentials } = req.body;
@@ -518,11 +512,7 @@ const deleteApiIntegration = async (req, res) => {
   }
 };
 
-/**
- * POST /settings/custom-param/calculate
- * Body: { formula: [{type:'param',value:'Revenue'},{type:'op',value:'+'},{type:'param',value:'Spend'}] }
- * Uses active dataset rows to evaluate the formula.
- */
+
 const calculateCustomParam = async (req, res) => {
   try {
     const { formula } = req.body;
@@ -586,11 +576,6 @@ const calculateCustomParam = async (req, res) => {
   }
 };
 
-/**
- * POST /settings/custom-param/save
- * Body: { name: 'Marketing ROI', formula: [...], result: 123.45 }
- * Adds the calculated value as a new column to every row in the active dataset.
- */
 const saveCustomParam = async (req, res) => {
   try {
     const { name, formula, result } = req.body;
@@ -635,16 +620,9 @@ const saveCustomParam = async (req, res) => {
   }
 };
 
-/**
- * POST /settings/integrate-api
- * Single-button external API integration.
- * Calls the external API configured in .env, processes response,
- * creates a dataset, auto-maps columns, calculates KPIs, and activates.
- * Frontend only triggers this endpoint — no API logic in frontend.
- */
+
 const integrateExternalApi = async (req, res) => {
   try {
-    // 1. Call external API via service
     let rawData;
     try {
       rawData = await fetchExternalData();
@@ -653,7 +631,6 @@ const integrateExternalApi = async (req, res) => {
       return res.status(502).json({ error: apiErr.message });
     }
 
-    // 2. Normalize: find the array of rows in the response
     let rows = [];
     if (Array.isArray(rawData)) {
       rows = rawData;
@@ -774,5 +751,6 @@ const integrateExternalApi = async (req, res) => {
     res.status(500).json({ error: err.message || 'Failed to integrate external API data.' });
   }
 };
+
 
 module.exports = { upload, getSystemParameters, getDatasets, uploadExcel, appendToDataset, getMappings, updateMapping, updateDatasetType, validateDataset, downloadMappedExcel, saveAndProceed, deleteDataset, saveApiIntegration, getApiIntegrations, fetchAndActivateApi, deleteApiIntegration, calculateCustomParam, saveCustomParam, integrateExternalApi };

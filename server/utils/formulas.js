@@ -93,7 +93,7 @@ function calcDashboardKPIs(rows) {
   const resourceRevenue = get(agg, 'Resource Revenue', 'Resource revenue');
   const channelCost = get(agg, 'Channel cost', 'Channel Cost');
   const prMediaCost = get(agg, 'PR / Media cost', 'PR Media cost');
-
+  console.log("channelRevenue", channelRevenue, "prMediaRevenue", prMediaRevenue, "resourceRevenue", resourceRevenue, "channelCost", channelCost, "prMediaCost", prMediaCost);
   const revenue = (channelRevenue + prMediaRevenue + resourceRevenue) - (channelCost + prMediaCost);
   const mktgCost = get(agg, 'Marketing cost', 'Marketing Cost', 'Total Marketing Cost');
   const salesCost = get(agg, 'Sales Cost', 'Total Sales Cost');
@@ -204,14 +204,14 @@ function calcB2CKPIs(rows) {
 // ============================================
 // MONTH ORDERING UTILITY
 // ============================================
-const MONTH_ORDER = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_ORDER = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTH_ALIASES = {
-  'january':'Jan','february':'Feb','march':'Mar','april':'Apr','may':'May','june':'Jun',
-  'july':'Jul','august':'Aug','september':'Sep','october':'Oct','november':'Nov','december':'Dec',
-  'jan':'Jan','feb':'Feb','mar':'Mar','apr':'Apr','may':'May','jun':'Jun',
-  'jul':'Jul','aug':'Aug','sep':'Sep','oct':'Oct','nov':'Nov','dec':'Dec',
-  '1':'Jan','2':'Feb','3':'Mar','4':'Apr','5':'May','6':'Jun',
-  '7':'Jul','8':'Aug','9':'Sep','10':'Oct','11':'Nov','12':'Dec'
+  'january': 'Jan', 'february': 'Feb', 'march': 'Mar', 'april': 'Apr', 'may': 'May', 'june': 'Jun',
+  'july': 'Jul', 'august': 'Aug', 'september': 'Sep', 'october': 'Oct', 'november': 'Nov', 'december': 'Dec',
+  'jan': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr', 'may': 'May', 'jun': 'Jun',
+  'jul': 'Jul', 'aug': 'Aug', 'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dec': 'Dec',
+  '1': 'Jan', '2': 'Feb', '3': 'Mar', '4': 'Apr', '5': 'May', '6': 'Jun',
+  '7': 'Jul', '8': 'Aug', '9': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dec'
 };
 function normalizeMonth(raw) {
   if (!raw) return null;

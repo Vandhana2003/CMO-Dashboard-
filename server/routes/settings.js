@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/settingsController');
+
 const { authenticate, authorize } = require('../middleware/auth');
+const { integrateApi } = require('../controllers/settingsController');
 
 router.get('/parameters', authenticate, ctrl.getSystemParameters);
 router.get('/datasets', authenticate, authorize('super_admin', 'admin'), ctrl.getDatasets);

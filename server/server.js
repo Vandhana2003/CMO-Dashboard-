@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/dashboard', require('./routes/dashboard'));
+// app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/b2b', require('./routes/b2b'));
 app.use('/api/b2c', require('./routes/b2c'));
 app.use('/api/users', require('./routes/users'));
@@ -55,7 +55,7 @@ function killPortProcess(port) {
       try {
         execSync(`taskkill /PID ${pid} /F`, { encoding: 'utf8', timeout: 5000 });
         console.log(`🔄 Killed old process on port ${port} (PID: ${pid})`);
-      } catch (_) {}
+      } catch (_) { }
     }
     if (pids.size > 0) {
       // Small delay to let OS release the port
