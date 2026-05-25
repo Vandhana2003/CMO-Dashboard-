@@ -332,11 +332,7 @@ const saveAndProceed = async (req, res) => {
       }
     }
 
-    // Update mapped rows in DB with mapped keys
-    for (let i = 0; i < rows.length; i++) {
-      await query('UPDATE dataset_rows SET row_data = $1 WHERE dataset_id = $2 AND row_index = $3', [JSON.stringify(rows[i]), datasetId, i]);
-    }
-
+    // Keep original raw rows and avoid overwriting them; KPI caches are based on mapped values only.
     res.json({ message: 'Dataset activated successfully.', dashKpis, b2bKpis, b2cKpis, data_type: dataType });
   } catch (err) {
     console.error('Save and proceed error:', err);
@@ -525,16 +521,21 @@ const deleteApiIntegration = async (req, res) => {
  */
 const calculateCustomParam = async (req, res) => {
   try {
-    const { formula } = req.body;
+    const { formula, dataset_id } = req.body;
     if (!formula || !Array.isArray(formula) || formula.length === 0) {
       return res.status(400).json({ error: 'No formula provided.' });
     }
-    // Get active dataset rows
-    const ds = await query("SELECT id FROM datasets WHERE status = 'active' ORDER BY uploaded_at DESC LIMIT 1");
-    if (ds.rows.length === 0) return res.status(404).json({ error: 'No active dataset.' });
-    const rowsResult = await query('SELECT row_data FROM dataset_rows WHERE dataset_id = $1 ORDER BY row_index', [ds.rows[0].id]);
-    const rows = rowsResult.rows.map(r => r.row_data);
-    if (rows.length === 0) return res.status(404).json({ error: 'No data in active dataset.' });
+
+    let datasetId = dataset_id;
+    if (!datasetId) {
+      const ds = await query("SELECT id FROM datasets WHERE status = 'active' ORDER BY uploaded_at DESC LIMIT 1");
+      if (ds.rows.length === 0) return res.status(404).json({ error: 'No active dataset.' });
+      datasetId = ds.rows[0].id;
+    }
+
+    const rowsResult = await query('SELECT row_data FROM dataset_rows WHERE dataset_id = $1 ORDER BY row_index', [datasetId]);
+    if (rowsResult.rows.length === 0) return res.status(404).json({ error: 'No data in dataset.' });
+    const rows = rowsResult.rows.map(r => typeof r.row_data === 'string' ? JSON.parse(r.row_data) : r.row_data);
 
     // Build expression string, aggregate param values across all rows
     const paramSums = {};
@@ -593,12 +594,15 @@ const calculateCustomParam = async (req, res) => {
  */
 const saveCustomParam = async (req, res) => {
   try {
-    const { name, formula, result } = req.body;
+    const { name, formula, result, dataset_id } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ error: 'Parameter name is required.' });
 
-    const ds = await query("SELECT id FROM datasets WHERE status = 'active' ORDER BY uploaded_at DESC LIMIT 1");
-    if (ds.rows.length === 0) return res.status(404).json({ error: 'No active dataset.' });
-    const datasetId = ds.rows[0].id;
+    let datasetId = dataset_id;
+    if (!datasetId) {
+      const ds = await query("SELECT id FROM datasets WHERE status = 'active' ORDER BY uploaded_at DESC LIMIT 1");
+      if (ds.rows.length === 0) return res.status(404).json({ error: 'No active dataset.' });
+      datasetId = ds.rows[0].id;
+    }
 
     // Get all rows and add the new param to each
     const rowsResult = await query('SELECT id, row_data FROM dataset_rows WHERE dataset_id = $1 ORDER BY row_index', [datasetId]);
@@ -606,7 +610,7 @@ const saveCustomParam = async (req, res) => {
 
     // Calculate per-row or set aggregate
     for (const row of rowsResult.rows) {
-      const data = row.row_data;
+      const data = typeof row.row_data === 'string' ? JSON.parse(row.row_data) : row.row_data;
       // Evaluate formula per row
       let expr = '';
       let lastType = null;

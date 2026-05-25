@@ -29,7 +29,7 @@ export default function ReportPage() {
     api.getDashboard().then(r => {
       if (r.data_type) { setType(r.data_type); localStorage.setItem('cmo_data_type', r.data_type); }
       if (r.channels) setChannels(r.channels);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   // Watch for type changes from settings
@@ -98,11 +98,10 @@ export default function ReportPage() {
 
       {/* Action Buttons */}
       <div className="chart-card" style={{ marginBottom: 24 }}>
-        <div className="chart-title">📄 {typeLabel} Report Generator</div>
+        <div className="chart-title"><><i className="bi bi-file-earmark-text-fill"></i> {typeLabel} Report Generator</></div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginTop: 12 }}>
           <button className="btn btn-primary" onClick={fetchReport} disabled={loading || !type}>
-            {loading ? 'Generating...' : '📊 Generate Report'}
-          </button>
+            {loading ? 'Generating...' : <><i className="bi bi-bar-chart-fill"></i> Generate Report</>}          </button>
           <button className="btn btn-success" onClick={openDownloadModal} disabled={downloading || !type}>
             {downloading ? 'Downloading...' : '⬇ Download Report'}
           </button>
@@ -114,7 +113,7 @@ export default function ReportPage() {
         <>
           {/* Filter Details */}
           <div className="chart-card" style={{ marginBottom: 16 }}>
-            <div className="chart-title">🔍 Report Details</div>
+            <div className="chart-title"><><i className="bi bi-search"></i> Report Details</></div>
             <div className="rpt-detail-grid">
               <div className="rpt-detail-item">
                 <span className="rpt-detail-label">Dataset Type</span>
@@ -160,7 +159,7 @@ export default function ReportPage() {
           {/* Chart Summary */}
           {report.chartSummary && Object.keys(report.chartSummary).length > 0 && (
             <div className="chart-card">
-              <div className="chart-title">📊 Chart Data Summary</div>
+              <div className="chart-title"><><i className="bi bi-bar-chart-fill"></i> Chart Data Summary</></div>
               <div className="rpt-chart-summary">
                 {Object.entries(report.chartSummary).map(([chart, data]) => (
                   <div key={chart} className="rpt-chart-block">
@@ -187,7 +186,7 @@ export default function ReportPage() {
 
       {report && !report.hasData && (
         <div className="chart-card" style={{ textAlign: 'center', padding: 40 }}>
-          <span style={{ fontSize: 48, opacity: 0.4 }}>📄</span>
+          <span style={{ fontSize: 48, opacity: 0.4 }}><i className="bi bi-file-earmark-text-fill"></i></span>
           <p style={{ color: 'var(--text-muted)', marginTop: 12 }}>No data available for the selected filters. Upload a dataset first.</p>
         </div>
       )}

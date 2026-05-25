@@ -1,6 +1,30 @@
 const XLSX = require('xlsx');
 const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./formulas');
 
+const SYSTEM_PARAM_SYNONYMS = {
+  'revenue': ['sales revenue', 'total revenue', 'revenue total', 'revenue amount', 'net revenue', 'channel revenue'],
+  'marketing cost': ['marketing spend', 'total marketing cost', 'marketing expense', 'ad spend', 'ads cost'],
+  'channel revenue': ['channel sales', 'channel income'],
+  'channel cost': ['channel spend', 'channel expense'],
+  'sales cost': ['cost of sales', 'sales expense', 'selling cost'],
+  'number of new customers': ['new customers', 'new customer count', 'customers acquired'],
+  'leads': ['lead count', 'total leads'],
+  'cogs': ['cost of goods sold', 'cost of goods', 'cogs cost'],
+  'total customers': ['customers total', 'customer count'],
+  'total orders': ['orders total', 'order count'],
+};
+
+function words(str) {
+  return normalizeKey(str).split(' ').filter(Boolean);
+}
+
+function hasStrongWordMatch(header, param) {
+  const headerWords = words(header);
+  const paramWords = words(param);
+  if (paramWords.length === 0 || headerWords.length === 0) return false;
+  return paramWords.every(word => headerWords.includes(word)) || headerWords.every(word => paramWords.includes(word));
+}
+
 /**
  * Parse an Excel file buffer into an array of row objects
  */
@@ -52,12 +76,36 @@ function autoMapColumns(excelHeaders, dataType) {
       const partial = normalizedHeaders.find(h =>
         !usedHeaders.has(h.original) &&
         (h.normalized.includes(nsp) || nsp.includes(h.normalized)) &&
-        h.normalized.length > 2 // avoid matching tiny substrings
+        h.normalized.length > 2
       );
       if (partial) {
         bestMatch = partial.original;
         matchStatus = 'auto';
         usedHeaders.add(partial.original);
+      } else {
+        // Pass 3: synonym match
+        const synonyms = SYSTEM_PARAM_SYNONYMS[nsp] || [];
+        const synonymMatch = normalizedHeaders.find(h =>
+          !usedHeaders.has(h.original) &&
+          synonyms.some(syn => h.normalized.includes(syn) || syn.includes(h.normalized))
+        );
+        if (synonymMatch) {
+          bestMatch = synonymMatch.original;
+          matchStatus = 'auto';
+          usedHeaders.add(synonymMatch.original);
+        } else {
+          // Pass 4: strong word overlap
+          const wordMatch = normalizedHeaders.find(h =>
+            !usedHeaders.has(h.original) &&
+            hasStrongWordMatch(h.normalized, nsp) &&
+            h.normalized.length > 2
+          );
+          if (wordMatch) {
+            bestMatch = wordMatch.original;
+            matchStatus = 'auto';
+            usedHeaders.add(wordMatch.original);
+          }
+        }
       }
     }
 
@@ -123,6 +171,8 @@ function validateMappings(mappings) {
   const issues = [];
   const mapped = mappings.filter(m => m.match_status !== 'unmapped' && m.match_status !== 'missing');
   const unmapped = mappings.filter(m => m.match_status === 'unmapped' || m.match_status === 'missing');
+  const autoMapped = mappings.filter(m => m.match_status === 'auto' && m.match_status !== 'missing');
+  const manualMapped = mappings.filter(m => m.match_status === 'manual' && m.match_status !== 'missing');
 
   if (unmapped.length > 0) {
     issues.push({ level: 'warning', message: `${unmapped.length} system parameter(s) not mapped: ${unmapped.map(m => m.system_parameter).join(', ')}` });
@@ -139,6 +189,8 @@ function validateMappings(mappings) {
   return {
     valid: issues.filter(i => i.level === 'error').length === 0,
     mapped_count: mapped.length,
+    auto_count: autoMapped.length,
+    manual_count: manualMapped.length,
     missing_count: unmapped.length,
     total_count: mappings.length,
     issues
