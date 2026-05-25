@@ -30,7 +30,7 @@ const PARAMETERS = [
   { name: 'Deal Value', desc: 'Estimated monetary value of a sales deal or opportunity. Used in revenue forecasting.', usedIn: ['Dashboard', 'B2B'] },
   { name: 'Probability', desc: 'Estimated percentage chance of successfully winning or closing a sales deal.', usedIn: ['Dashboard', 'B2B'] }, 
   { name: 'Channel Revenue', desc: 'Revenue generated from a specific marketing or sales channel.', usedIn: ['Dashboard'] },  
-];  
+];   
 
 const METRICS = [
   { name: 'Revenue', desc: 'Total income generated from all sales and business activities after considering channel revenue and media contribution.', usedIn: ['Dashboard'] },
