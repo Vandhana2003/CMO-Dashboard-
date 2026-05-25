@@ -1,5 +1,5 @@
 const XLSX = require('xlsx');
-const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./formulas'); 
+const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./formulas');  
 
 const SYSTEM_PARAM_SYNONYMS = {
   'revenue': ['sales revenue', 'total revenue', 'revenue total', 'revenue amount', 'net revenue', 'channel revenue'],
