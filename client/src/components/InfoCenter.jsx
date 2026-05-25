@@ -28,7 +28,7 @@ const PARAMETERS = [
   { name: 'Leads', desc: 'Total number of potential customers or inquiries generated from campaigns or channels.', usedIn: ['Dashboard'] },
   { name: 'Number of MQLs', desc: 'Marketing Qualified Leads — leads identified by marketing as interested and likely to convert.', usedIn: ['B2B'] },
   { name: 'Deal Value', desc: 'Estimated monetary value of a sales deal or opportunity. Used in revenue forecasting.', usedIn: ['Dashboard', 'B2B'] },
-  { name: 'Probability', desc: 'Estimated percentage chance of successfully winning or closing a sales deal.', usedIn: ['Dashboard', 'B2B'] },
+  { name: 'Probability', desc: 'Estimated percentage chance of successfully winning or closing a sales deal.', usedIn: ['Dashboard', 'B2B'] }, 
   { name: 'Channel Revenue', desc: 'Revenue generated from a specific marketing or sales channel.', usedIn: ['Dashboard'] }, 
 ];  
 
