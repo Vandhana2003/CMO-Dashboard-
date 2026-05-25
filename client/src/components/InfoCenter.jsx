@@ -17,7 +17,7 @@ const PARAMETERS = [
   { name: 'Customers Lost', desc: 'Number of customers who stopped purchasing or became inactive during the selected period.', usedIn: ['B2B'] },
   { name: 'Customers at Start of Period', desc: 'Total active customers present at the beginning of the reporting period. Mainly used for churn calculations.', usedIn: ['B2B'] },
   { name: 'AOV (Average Order Value)', desc: 'Average amount spent by customers per order. Calculated using Revenue ÷ Total Orders.', usedIn: ['B2C'] },
-  { name: 'Purchase Frequency', desc: 'Average number of purchases made by each customer during a period.', usedIn: ['B2C'] },
+  { name: 'Purchase Frequency', desc: 'Average number of purchases made by each customer during a period.', usedIn: ['B2C'] }, 
   { name: 'Customer Lifespan', desc: 'Average duration a customer continues purchasing from the business before becoming inactive.', usedIn: ['B2C'] },
   { name: 'Repeat Customer', desc: 'Number of customers who made more than one purchase. Used to measure customer loyalty.', usedIn: ['B2C'] },
   { name: 'Total Customers', desc: 'Total number of unique customers during the selected period.', usedIn: ['B2C'] },
