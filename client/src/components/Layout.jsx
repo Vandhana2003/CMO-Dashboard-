@@ -13,7 +13,7 @@ const NAV_MGMT = [
   { path: '/report', label: 'Report', icon: <i className="bi bi-file-earmark-text-fill"></i>, restricted: true },
   // { path: '/account', label: 'Account', icon: <i className="bi bi-person-badge-fill"></i>, restricted: true },
   { path: '/settings', label: 'Settings', icon: <i className="bi bi-gear-fill"></i>, restricted: true },
-  { path: '/info', label: 'Info', icon: <i className="bi bi-info-circle-fill"></i> },
+  { path: '/info', label: 'Info', icon: <i className="bi bi-info-circle-fill"></i> }, 
 ];
 
 export default function Layout() {
