@@ -3,7 +3,7 @@ const { normalizeKey, SYSTEM_PARAMETERS, getParametersForType } = require('./for
 
 const SYSTEM_PARAM_SYNONYMS = {
   'revenue': ['sales revenue', 'total revenue', 'revenue total', 'revenue amount', 'net revenue', 'channel revenue'],
-  'marketing cost': ['marketing spend', 'total marketing cost', 'marketing expense', 'ad spend', 'ads cost'],
+  'marketing cost': ['marketing spend', 'total marketing cost', 'marketing expense', 'ad spend', 'ads cost'], 
   'channel revenue': ['channel sales', 'channel income'],
   'channel cost': ['channel spend', 'channel expense'],
   'sales cost': ['cost of sales', 'sales expense', 'selling cost'],
