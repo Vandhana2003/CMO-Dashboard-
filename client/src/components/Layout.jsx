@@ -95,7 +95,7 @@ export default function Layout() {
           <div className="topbar-right">
             <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme">
               {theme === 'dark' ? <i className="bi bi-sun-fill"></i> : <i className="bi bi-moon-stars-fill"></i>}
-            </button>
+            </button> 
             <div style={{ position: 'relative' }}>
               <button className="profile-btn" onClick={() => setProfileOpen(!profileOpen)}>
                 <div className="profile-avatar">{initials}</div>
