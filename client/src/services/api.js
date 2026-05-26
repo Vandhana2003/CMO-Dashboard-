@@ -329,7 +329,238 @@ const fetchExternalData4 = async () => {
 
   return resData;
 };
+const fetchExternalData5 = async () => {
 
+  const url = 'https://pgapi.plumb5.in/cmo/GetDashboardSummary';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'P5APIKEY': '056d9b3cb5e4b39b5e4512b5eb331b5e6371c81031b8',
+    'P5AccountId': 4,
+  };
+
+  const body = JSON.stringify({
+    startDate: '2000-05-21T10:09:27.035Z',
+    endDate: '2027-05-21T10:09:27.035Z',
+    expStartDate: '2000-05-21T10:09:27.035Z',
+    expEndDate: '2027-05-21T10:09:27.035Z',
+    accountType: 3
+  });
+
+  let response;
+
+  try {
+
+    response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body,
+    });
+
+  } catch (fetchErr) {
+
+    const code = fetchErr?.cause?.code || fetchErr.code || '';
+
+    if (code === 'ECONNREFUSED') {
+      throw new Error(
+        `Cannot connect to external API at ${url}`
+      );
+    }
+
+    throw new Error(
+      `Network error reaching external API: ${fetchErr.message}`
+    );
+  }
+
+  if (!response.ok) {
+
+    const errorText = await response.text().catch(() => '');
+
+    throw new Error(
+      `External API returned HTTP ${response.status}: ${response.statusText}. ${errorText}`
+    );
+  }
+
+  const resData = await response.json();
+
+  // console.log('API RESPONSE:', resData);
+
+  return resData;
+};
+const fetchExternalData6 = async () => {
+
+  const url = 'https://pgapi.plumb5.in/cmo/GetDashboardSummary';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'P5APIKEY': '056d9b3cb5e4b39b5e4512b5eb331b5e6371c81031b8',
+    'P5AccountId': 4,
+  };
+
+  const body = JSON.stringify({
+    startDate: '2000-05-21T10:09:27.035Z',
+    endDate: '2027-05-21T10:09:27.035Z',
+    expStartDate: '2000-05-21T10:09:27.035Z',
+    expEndDate: '2027-05-21T10:09:27.035Z',
+    accountType: 5
+  });
+
+  let response;
+
+  try {
+
+    response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body,
+    });
+
+  } catch (fetchErr) {
+
+    const code = fetchErr?.cause?.code || fetchErr.code || '';
+
+    if (code === 'ECONNREFUSED') {
+      throw new Error(
+        `Cannot connect to external API at ${url}`
+      );
+    }
+
+    throw new Error(
+      `Network error reaching external API: ${fetchErr.message}`
+    );
+  }
+
+  if (!response.ok) {
+
+    const errorText = await response.text().catch(() => '');
+
+    throw new Error(
+      `External API returned HTTP ${response.status}: ${response.statusText}. ${errorText}`
+    );
+  }
+
+  const resData = await response.json();
+
+  // console.log('API RESPONSE:', resData);
+
+  return resData;
+};
+const fetchExternalData7 = async () => {
+
+  const url = 'https://pgapi.plumb5.in/cmo/GetDashboardSummary';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'P5APIKEY': '056d9b3cb5e4b39b5e4512b5eb331b5e6371c81031b8',
+    'P5AccountId': 4,
+  };
+
+  const body = JSON.stringify({
+    startDate: '2000-05-21T10:09:27.035Z',
+    endDate: '2027-05-21T10:09:27.035Z',
+    expStartDate: '2000-05-21T10:09:27.035Z',
+    expEndDate: '2027-05-21T10:09:27.035Z',
+    accountType: 6
+  });
+
+  let response;
+
+  try {
+
+    response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body,
+    });
+
+  } catch (fetchErr) {
+
+    const code = fetchErr?.cause?.code || fetchErr.code || '';
+
+    if (code === 'ECONNREFUSED') {
+      throw new Error(
+        `Cannot connect to external API at ${url}`
+      );
+    }
+
+    throw new Error(
+      `Network error reaching external API: ${fetchErr.message}`
+    );
+  }
+
+  if (!response.ok) {
+
+    const errorText = await response.text().catch(() => '');
+
+    throw new Error(
+      `External API returned HTTP ${response.status}: ${response.statusText}. ${errorText}`
+    );
+  }
+
+  const resData = await response.json();
+
+  // console.log('API RESPONSE:', resData);
+
+  return resData;
+};
+const fetchExternalData8 = async () => {
+
+  const url = 'https://pgapi.plumb5.in/cmo/GetDashboardSummary';
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'P5APIKEY': '056d9b3cb5e4b39b5e4512b5eb331b5e6371c81031b8',
+    'P5AccountId': 4,
+  };
+
+  const body = JSON.stringify({
+    startDate: '2000-05-21T10:09:27.035Z',
+    endDate: '2027-05-21T10:09:27.035Z',
+    expStartDate: '2000-05-21T10:09:27.035Z',
+    expEndDate: '2027-05-21T10:09:27.035Z',
+    accountType: 10
+  });
+
+  let response;
+
+  try {
+
+    response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body,
+    });
+
+  } catch (fetchErr) {
+
+    const code = fetchErr?.cause?.code || fetchErr.code || '';
+
+    if (code === 'ECONNREFUSED') {
+      throw new Error(
+        `Cannot connect to external API at ${url}`
+      );
+    }
+
+    throw new Error(
+      `Network error reaching external API: ${fetchErr.message}`
+    );
+  }
+
+  if (!response.ok) {
+
+    const errorText = await response.text().catch(() => '');
+
+    throw new Error(
+      `External API returned HTTP ${response.status}: ${response.statusText}. ${errorText}`
+    );
+  }
+
+  const resData = await response.json();
+
+  // console.log('API RESPONSE:', resData);
+
+  return resData;
+};
 
 // module.exports = { fetchExternalData };
 
@@ -401,4 +632,9 @@ export const api = {
   integrateApi2: () => fetchExternalData2(),
   integrateApi3: () => fetchExternalData3(),
   integrateApi4: () => fetchExternalData4(),
+  integrateApi5: () => fetchExternalData5(),
+  integrateApi6: () => fetchExternalData6(),
+  integrateApi7: () => fetchExternalData7(),
+  integrateApi8: () => fetchExternalData8(),
+
 };

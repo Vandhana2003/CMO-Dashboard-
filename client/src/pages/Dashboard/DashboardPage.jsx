@@ -81,7 +81,10 @@ export default function DashboardPage() {
         const res2 = await api.integrateApi2();
         const res3 = await api.integrateApi3();
         const res4 = await api.integrateApi4();
-
+        const res5 = await api.integrateApi5();
+        const res6 = await api.integrateApi6();
+        const res7 = await api.integrateApi7();
+        const res8 = await api.integrateApi8();
 
         // console.log('External API Response3:', res3);
 
@@ -106,7 +109,7 @@ export default function DashboardPage() {
         }
         if (res3.data[0].repeatvisitors) {
           const repeatvisit = res3.data.reduce((sum, item) => sum + (item.repeatvisitors || 0), 0);
-          const reepatvisitpercent = Math.floor((repeatvisit / (res.totalCount || 1)) * 100);
+          const reepatvisitpercent = Math.floor((repeatvisit / (res7.totalCount || 1)) * 100);
           sessionStorage.setItem('reepatvisitpercent', reepatvisitpercent);
         }
         // if (res4.channelWiseCount[0].data[0].uniquevisit) {
@@ -159,8 +162,49 @@ export default function DashboardPage() {
 
           console.log(channelWiseCpl);
         }
+        if (res5?.totalCount !== undefined) {
+          console.log('res5', res5);
+          const totalSQL = res5.totalCount || 0;
+          const avgNumberofSQL = Math.floor(
+            totalSQL / (res.totalCount || 1)
+          );
+          sessionStorage.setItem('Number of SQL', avgNumberofSQL);
+        }
 
-      } catch (err) {
+        if (res6?.totalCount !== undefined) {
+          const totalMQL = res6.totalCount || 0;
+          const avgNumberofMQL = Math.floor(
+            totalMQL / (res.totalCount || 1)
+          );
+          sessionStorage.setItem('Number of MQL', avgNumberofMQL);
+        }
+        if (res7?.totalCount !== undefined) {
+          const totalcustomer = res7.totalCount || 0;
+          const conversionRate = Math.floor(
+            (totalcustomer / (res.totalCount || 1)) * 100
+          );
+          sessionStorage.setItem('totalcustomer', totalcustomer);
+          sessionStorage.setItem('conversion_rate', conversionRate);
+          console.log('totalcustomer', totalcustomer);
+        }
+        let customersatstartofperiod = 0;
+        if (res8?.totalCount !== undefined) {
+          customersatstartofperiod = res8.totalCount.reduce((sum, item) => sum + (item.totalCount || 0), 0);
+          // sessionStorage.setItem('customers at start of period', customersatstartofperiod);
+        }
+        if (res5?.totalCount !== undefined) {
+          console.log('res5 for churns', res5);
+          const totalLost = res5.status.filter(item => item.status == 0).length;
+          const churnRate = Math.floor(
+            totalLost / (customersatstartofperiod) * 100
+          );
+          console.log('churnRate', churnRate);
+          console.log('totalost', totalLost);
+          console.log('customet start period', customersatstartofperiod);
+          sessionStorage.setItem('churnRate', churnRate);
+        }
+      }
+      catch (err) {
 
         console.error(
           'Failed to fetch external data:',
@@ -209,21 +253,21 @@ export default function DashboardPage() {
     { l: 'Blended ROI', v: `${dashKpis.blended_roi || 0}%`, i: '📈' },
     { l: 'CAC', v: `$${(dashKpis.cac || 0).toLocaleString()}`, i: '🎯' },
     { l: 'Total Leads', v: (dashKpis.total_leads || Number(sessionStorage.getItem('totalCount')) || 0).toLocaleString(), i: '👥' },
-    { l: 'Conversion Rate', v: `${dashKpis.conversion_rate || 0}%`, i: '🔄' },
+    { l: 'Conversion Rate', v: Number(sessionStorage.getItem('conversion_rate')) || `${dashKpis.conversion_rate || 0}%`, i: '🔄' },
     { l: 'CPL', v: `$${(dashKpis.cpl || Number(sessionStorage.getItem('CPL')) || 0).toLocaleString()}`, i: '📉' },
   ];
   // B2B 5 KPIs
   const b2bCards = [
     { l: 'Pipeline Value', v: `$${(b2bKpis.pipeline_value || 0).toLocaleString()}`, i: '💎' },
-    { l: 'MQL → SQL Rate', v: `${b2bKpis.mql_sql_conversion || 0}%`, i: '🔄' },
+    { l: 'MQL → SQL Rate', v: `${b2bKpis.mql_sql_conversion || Number(sessionStorage.getItem('Number of SQL')) / Number(sessionStorage.getItem('Number of MQL')) * 100 || 0}%`, i: '🔄' },
     { l: 'Deal Velocity', v: `${b2bKpis.deal_velocity || Number(sessionStorage.getItem('daystoclose')) || 0} days`, i: '⚡' },
     { l: 'Win Rate', v: `${b2bKpis.win_rate || 0}%`, i: '🏆' },
-    { l: 'Churn Rate', v: `${b2bKpis.churn_rate || 0}%`, i: '📉' },
+    { l: 'Churn Rate', v: Number(sessionStorage.getItem('churnRate')) || `${b2bKpis.churn_rate || 0}%`, i: '📉' },
   ];
   // B2C 5 KPIs
   const b2cCards = [
     { l: 'Lifetime Value (LTV)', v: `$${(b2cKpis.ltv || 0).toLocaleString()}`, i: '💎' },
-    { l: 'Repeat Purchase Rate', v: `${b2cKpis.repeat_purchase_rate || Number(sessionStorage.getItem('reepatvisitpercent')) || 0}%`, i: '🔁' },
+    { l: 'Repeat Purchase Rate', v: Number(sessionStorage.getItem('reepatvisitpercent')) || `${b2cKpis.repeat_purchase_rate || 0}%`, i: '🔁' },
     { l: 'Avg Order Value', v: `$${(b2cKpis.aov || 0).toLocaleString()}`, i: '🛍️' },
     { l: 'Cart Abandonment', v: `${b2cKpis.cart_abandonment_rate || 0}%`, i: '🛒' },
     { l: 'Purchase Frequency', v: `${b2cKpis.purchase_frequency || 0}x`, i: '📊' },
@@ -238,8 +282,8 @@ export default function DashboardPage() {
   const fun = dashCharts.conversion_funnel;
   const fStages = [
     { l: 'Leads', v: Number(sessionStorage.getItem('totalCount')) || 0, c: FC[0] },
-    { l: 'MQLs', v: fun?.mqls || 0, c: FC[1] },
-    { l: 'SQLs', v: fun?.sqls || 0, c: FC[2] },
+    { l: 'MQLs', v: Number(sessionStorage.getItem('Number of MQL')) || fun?.mqls || 0, c: FC[1] },
+    { l: 'SQLs', v: Number(sessionStorage.getItem('Number of SQL')) || fun?.sqls || 0, c: FC[2] },
     { l: 'Repeat Visitors', v: Number(sessionStorage.getItem('reepatvisitpercent')) || 0, c: FC[3] }
   ];
   const maxF = Math.max(fStages[0].v, 1);
